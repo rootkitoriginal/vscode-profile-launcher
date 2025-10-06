@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
-import { ConfigManager } from './config';
+import { ConfigService } from './ConfigService';
 
 export interface AIRequest {
     prompt: string;
@@ -20,22 +20,22 @@ export interface AIResponse {
     };
 }
 
-export class AIManager {
-    private static instance: AIManager;
-    private config: ConfigManager;
+export class AIService {
+    private static instance: AIService;
+    private config: ConfigService;
     private geminiClient: GoogleGenerativeAI | null = null;
     private openaiClient: OpenAI | null = null;
 
     private constructor() {
-        this.config = ConfigManager.getInstance();
+        this.config = ConfigService.getInstance();
         this.initializeClients();
     }
 
-    public static getInstance(): AIManager {
-        if (!AIManager.instance) {
-            AIManager.instance = new AIManager();
+    public static getInstance(): AIService {
+        if (!AIService.instance) {
+            AIService.instance = new AIService();
         }
-        return AIManager.instance;
+        return AIService.instance;
     }
 
     private initializeClients(): void {

@@ -1,7 +1,7 @@
-import config from './config';
-import { GitHubIssue, IssueState } from './types';
+import config from './ConfigService';
+import { GitHubIssue, IssueState } from '../types';
 
-export class GitHubManager {
+export class GitHubService {
   private octokit: any = null;
   private Octokit: any = null;
 
@@ -217,4 +217,4 @@ export class GitHubManager {
   }
 }
 
-export default new GitHubManager();
+export default new GitHubService();

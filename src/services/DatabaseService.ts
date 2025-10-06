@@ -1,9 +1,9 @@
 import Database from 'better-sqlite3';
 import * as path from 'path';
 import { app } from 'electron';
-import { Profile, CreateProfileData, UpdateProfileData } from './types';
+import { Profile, CreateProfileData, UpdateProfileData } from '../types';
 
-export class DatabaseManager {
+export class DatabaseService {
     private db: Database.Database;
 
     constructor() {
