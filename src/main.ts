@@ -212,7 +212,7 @@ class App {
         // GitHub repository listing handler
         ipcMain.handle('github-list-repos', async (_: IpcMainInvokeEvent, owner: string) => {
             await this.initGitHubManager();
-            return this.githubController.listRepositories();
+            return this.githubController.listRepositories(owner);
         });
     }
 
