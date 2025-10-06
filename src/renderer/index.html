@@ -147,12 +147,27 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="profileName">Profile Name *</label>
-                        <input type="text" id="profileName" name="name" required class="form-input">
+                        <input 
+                            type="text" 
+                            id="profileName" 
+                            name="name" 
+                            required 
+                            minlength="1"
+                            maxlength="100"
+                            pattern=".*\S+.*"
+                            title="Profile name is required and cannot be empty"
+                            class="form-input"
+                            placeholder="Enter profile name">
                     </div>
                     
                     <div class="form-group">
                         <label for="profileLanguage">Primary Language *</label>
-                        <select id="profileLanguage" name="language" required class="form-select">
+                        <select 
+                            id="profileLanguage" 
+                            name="language" 
+                            required
+                            title="Please select a programming language"
+                            class="form-select">
                             <option value="">Select a language...</option>
                             <option value="TypeScript">TypeScript</option>
                             <option value="JavaScript">JavaScript</option>

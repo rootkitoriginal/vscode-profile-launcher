@@ -11,7 +11,9 @@ export class GitHubService {
 
   private async initialize() {
     try {
-      const { Octokit } = await import('@octokit/rest');
+      // Use eval to force dynamic import in CommonJS
+      const importFn = new Function('specifier', 'return import(specifier)');
+      const { Octokit } = await importFn('@octokit/rest');
       this.Octokit = Octokit;
       
       const token = config.getGitHubToken();

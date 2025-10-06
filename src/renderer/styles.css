@@ -1082,3 +1082,62 @@ a:hover {
 .label-tag:hover {
     opacity: 0.8;
 }
+
+/* ============================================
+   NOTIFICATION SYSTEM
+   ============================================ */
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: -400px;
+    min-width: 300px;
+    max-width: 400px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    box-shadow: var(--shadow);
+    z-index: 10000;
+    transition: right 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+}
+
+.notification.show {
+    right: 20px;
+    opacity: 1;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.notification-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.notification-message {
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.notification.success {
+    border-left: 4px solid var(--success-color);
+}
+
+.notification.error {
+    border-left: 4px solid var(--error-color);
+}
+
+.notification.warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+.notification.info {
+    border-left: 4px solid var(--accent-color);
+}

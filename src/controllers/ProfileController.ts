@@ -41,14 +41,18 @@ export class ProfileController {
      */
     async createProfile(profileData: CreateProfileData): Promise<Profile> {
         try {
+            console.log('🎯 ProfileController.createProfile called with:', profileData);
+            
             // Validate profile data
             if (!profileData.name || !profileData.language) {
                 throw new Error('Profile name and language are required');
             }
 
-            return this.dbService.createProfile(profileData);
+            const result = this.dbService.createProfile(profileData);
+            console.log('✅ ProfileController.createProfile success:', result);
+            return result;
         } catch (error) {
-            console.error('Error creating profile:', error);
+            console.error('❌ ProfileController.createProfile error:', error);
             throw error;
         }
     }
@@ -58,9 +62,23 @@ export class ProfileController {
      */
     async updateProfile(id: number, profileData: UpdateProfileData): Promise<Profile | null> {
         try {
-            return this.dbService.updateProfile(id, profileData);
+            console.log('🎯 ProfileController.updateProfile called with id:', id, 'data:', profileData);
+            
+            // Validate profile data - name is required if provided
+            if (profileData.name !== undefined && (!profileData.name || profileData.name.trim() === '')) {
+                throw new Error('Profile name cannot be empty');
+            }
+
+            // Validate language if provided
+            if (profileData.language !== undefined && (!profileData.language || profileData.language.trim() === '')) {
+                throw new Error('Profile language cannot be empty');
+            }
+
+            const result = this.dbService.updateProfile(id, profileData);
+            console.log('✅ ProfileController.updateProfile success:', result);
+            return result;
         } catch (error) {
-            console.error('Error updating profile:', error);
+            console.error('❌ ProfileController.updateProfile error:', error);
             throw error;
         }
     }

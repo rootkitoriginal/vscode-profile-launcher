@@ -282,40 +282,63 @@ async function handleProfileSubmit(e) {
     
     try {
         showLoading();
+        console.log('🚀 Starting profile submit...');
         
         const formData = new FormData(e.target);
+        
+        // Get and validate required fields
+        const name = formData.get('profileName')?.trim();
+        const language = formData.get('profileLanguage')?.trim();
+        
+        console.log('📝 Form data:', { name, language });
+        
+        // Validate required fields
+        if (!name || name === '') {
+            throw new Error('Profile name is required');
+        }
+        if (!language || language === '') {
+            throw new Error('Profile language is required');
+        }
+        
         const profileData = {
-            name: formData.get('profileName'),
-            language: formData.get('profileLanguage'),
-            description: formData.get('profileDescription'),
-            workspacePath: formData.get('workspacePath'),
-            aiProvider: formData.get('aiProvider') || null,
-            aiModel: formData.get('aiModel') || null,
+            name: name,
+            language: language,
+            description: formData.get('profileDescription')?.trim() || null,
+            workspacePath: formData.get('workspacePath')?.trim() || null,
+            aiProvider: formData.get('aiProvider')?.trim() || null,
+            aiModel: formData.get('aiModel')?.trim() || null,
             envVariables: profileModal.getEnvVariablesFromForm(),
             githubRepo: {
-                owner: formData.get('githubOwner') || null,
-                repo: formData.get('githubRepo') || null,
-                branch: formData.get('githubBranch') || null
+                owner: formData.get('githubOwner')?.trim() || null,
+                repo: formData.get('githubRepo')?.trim() || null,
+                branch: formData.get('githubBranch')?.trim() || null
             }
         };
         
+        console.log('💾 Profile data to save:', profileData);
+        
         if (profileModal.inEditMode()) {
             const currentProfile = profileModal.getCurrentProfile();
+            console.log('✏️ Updating profile:', currentProfile.id);
             await window.electronAPI.updateProfile(currentProfile.id, profileData);
             showSuccess('Profile updated successfully!');
         } else {
-            await window.electronAPI.createProfile(profileData);
+            console.log('➕ Creating new profile');
+            const result = await window.electronAPI.createProfile(profileData);
+            console.log('✅ Profile created:', result);
             showSuccess('Profile created successfully!');
         }
         
         // Reload profiles
+        console.log('🔄 Reloading profiles...');
         profiles = await window.electronAPI.getProfiles();
+        console.log('📦 Loaded profiles:', profiles.length);
         renderProfiles();
         
         profileModal.hide();
         
     } catch (error) {
-        console.error('Failed to save profile:', error);
+        console.error('❌ Failed to save profile:', error);
         showError(error.message || 'Failed to save profile');
     } finally {
         hideLoading();
