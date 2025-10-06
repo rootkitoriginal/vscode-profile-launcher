@@ -30,3 +30,4 @@ logs
 # Electron
 app/dist/
 release/
+*.backup

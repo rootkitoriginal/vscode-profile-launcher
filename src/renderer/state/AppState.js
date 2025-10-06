@@ -125,3 +125,4 @@ class AppState {
 
 // Export singleton instance
 const appState = new AppState();
+export default appState;
