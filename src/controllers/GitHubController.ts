@@ -84,14 +84,15 @@ export class GitHubController {
     }
 
     /**
-     * List repositories for the authenticated user
+     * List repositories for a given owner
+     * @param owner The owner (user or organization) whose repositories to list
      */
-    async listRepositories(): Promise<any[]> {
+    async listRepositories(owner: string): Promise<any[]> {
         try {
             if (!this.githubService) {
                 throw new Error('GitHub service not initialized');
             }
-            return await this.githubService.listRepositories();
+            return await this.githubService.listRepositories(owner);
         } catch (error) {
             console.error('Failed to list GitHub repositories:', error);
             throw error;
