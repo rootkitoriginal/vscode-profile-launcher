@@ -7,7 +7,8 @@
   "license": "MIT",
   "homepage": ".",
   "scripts": {
-    "build": "tsc",
+    "clean": "rm -rf dist build release",
+    "build": "npm run clean && tsc",
     "build:watch": "tsc --watch",
     "start": "npm run build && electron .",
     "dev": "concurrently \"npm run build:watch\" \"wait-on dist/main.js && electron .\"",
