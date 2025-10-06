@@ -1,48 +1,90 @@
-# VS Code Profile Launcher - Copilot Instructions
 
-This is an advanced Electron application built with TypeScript, SQLite, Monaco Editor, and AI integrations (Gemini & OpenAI) that serves as an intelligent VS Code profile launcher.
+🔧 Refatoração do app.js - Quebrar Monólito
+📋 Status: IN PROGRESS - Estrutura MVC Criada, Migração Pendente
 
-## Project Overview
-- **Technology Stack**: Electron, TypeScript, SQLite, Monaco Editor, Google Generative AI, OpenAI API
-- **Purpose**: Create and manage intelligent VS Code development profiles with AI assistance
-- **Advanced Features**: 
-  - VS Code-like interface with dark theme
-  - AI-powered code template generation (Gemini & OpenAI)
-  - Monaco Editor integration for code editing
-  - Environment variables management per profile
-  - Intelligent profile recommendations
-  - Performance-optimized VS Code launching
+🎯 Objetivo
+Refatorar o arquivo app.js (1399 linhas) quebrando-o em módulos menores e organizados seguindo o padrão MVC recém-implementado.
 
-## Architecture
-- **Main Process**: Electron app initialization, database management, AI integration, VS Code launching
-- **Renderer Process**: Modern UI with Monaco Editor, settings management, profile creation
-- **Database Layer**: SQLite with extended schema for AI settings, environment variables, code templates
-- **AI Layer**: Dual API integration (Gemini/OpenAI) with intelligent model selection
-- **Config Layer**: Environment variables management with secure API key storage
+📊 Análise Atual do app.js
+Linhas: 1399
+Funções: ~50+ funções misturadas
+Responsabilidades: UI, Estado, GitHub, IA, Configurações
 
-## Key Features
-- **Profile Management**: Create, edit, delete profiles with advanced settings
-- **AI Integration**: Generate code templates using Gemini (1.5 Flash/Pro) or OpenAI (GPT-3.5/4)
-- **Code Editor**: Monaco Editor with syntax highlighting for 10+ languages
-- **Environment Variables**: Per-profile environment configuration
-- **Smart Launch**: Optimized VS Code launching with performance flags
-- **Settings Management**: Secure API key configuration and provider status
-- **Search & Filter**: Advanced profile filtering and search capabilities
+✅ Infraestrutura MVC Já Implementada (Issue #1)
+1. Estrutura de Diretórios Criada
+✅ src/controllers/ - Controladores MVC prontos
+✅ src/models/ - Modelos de dados
+✅ src/views/components/ - Componentes UI
+✅ src/views/pages/ - Páginas
+✅ src/services/ - Serviços externos
+2. Arquivos de Estrutura Criados
+✅ src/controllers/AIController.ts
+✅ src/controllers/GitHubController.ts
+✅ src/controllers/ProfileController.ts
+✅ src/controllers/SettingsController.ts
+✅ src/services/AIService.ts
+✅ src/services/ConfigService.ts
+✅ src/services/DatabaseService.ts
+✅ src/services/GitHubService.ts
 
-## Development Guidelines
-- Use TypeScript for all source code with strict type checking
-- Follow Electron security best practices (context isolation, no node integration)
-- Implement clean, modular architecture with separation of concerns
-- Use SQLite for persistent data with proper migration support
-- Ensure cross-platform compatibility (Windows, macOS, Linux)
-- Implement proper error handling and user feedback
-- Follow modern web development practices for the renderer process
+🔄 Próximas Etapas - Migração do Código
+Fase 1: Migração dos Services ⏳
 
-## File Structure
-- `src/main.ts`: Electron main process with IPC handlers
-- `src/database.ts`: SQLite database manager with CRUD operations
-- `src/ai-manager.ts`: AI integration layer (Gemini/OpenAI)
-- `src/config.ts`: Configuration and environment variables manager
-- `src/types.ts`: TypeScript type definitions and interfaces
-- `src/preload.ts`: Secure IPC bridge between main and renderer
-- `src/renderer/`: Frontend application with Monaco Editor integration
+Migrar funções GitHub do app.js → GitHubService.ts
+
+Migrar funções IA do app.js → AIService.ts
+
+Migrar operações SQLite do app.js → DatabaseService.ts
+
+Migrar configurações do app.js → ConfigService.ts
+
+Fase 2: Migração dos Controllers ⏳
+
+Migrar lógica de perfis → ProfileController.ts
+
+Migrar operações GitHub → GitHubController.ts
+
+Migrar operações IA → AIController.ts
+
+Migrar configurações → SettingsController.ts
+
+Fase 3: Componentes UI ⏳
+
+Extrair ProfileList → views/components/ProfileList.js
+
+Extrair ProfileForm → views/components/ProfileForm.js
+
+Extrair SettingsModal → views/components/SettingsModal.js
+
+Extrair AIModal → views/components/AIModal.js
+
+Fase 4: App.js Simplificado ⏳
+
+Reduzir app.js para ~200 linhas
+
+Manter apenas inicialização e coordenação
+
+Implementar event delegation
+
+Testar funcionalidade preservada
+
+📈 Progresso Atual
+✅ Infraestrutura: 100% completa
+🔄 Migração Services: 0% - Pendente
+🔄 Migração Controllers: 0% - Pendente
+🔄 Componentes UI: 0% - Pendente
+🔄 App.js Final: 0% - Pendente
+
+🎯 Critérios de Aceitação
+
+app.js < 300 linhas
+
+Cada módulo < 200 linhas
+
+Cobertura de testes unitários
+
+Funcionalidade 100% preservada
+
+📋 Dependências
+✅ Issue MVC Restructuring Implementation - ✅ COMPLETED #1 - MVC Architecture Implementation (COMPLETED)
+🔄 Esta issue - Code Migration (IN PROGRESS)
