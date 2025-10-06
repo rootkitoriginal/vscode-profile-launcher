@@ -71,6 +71,14 @@ export class DatabaseService {
     }
 
     public createProfile(profileData: CreateProfileData): Profile {
+        // Validate required fields
+        if (!profileData.name || profileData.name.trim() === '') {
+            throw new Error('Profile name is required and cannot be empty');
+        }
+        if (!profileData.language || profileData.language.trim() === '') {
+            throw new Error('Profile language is required and cannot be empty');
+        }
+
         const query = `
             INSERT INTO profiles (name, language, description, workspacePath, extensions, aiProvider, aiModel, envVariables, codeTemplate, githubRepo)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -115,16 +123,24 @@ export class DatabaseService {
             return null;
         }
 
+        // Validate critical fields
+        if (profileData.name !== undefined && (!profileData.name || profileData.name.trim() === '')) {
+            throw new Error('Profile name cannot be empty');
+        }
+        if (profileData.language !== undefined && (!profileData.language || profileData.language.trim() === '')) {
+            throw new Error('Profile language cannot be empty');
+        }
+
         const updates: string[] = [];
         const values: any[] = [];
 
         if (profileData.name !== undefined) {
             updates.push('name = ?');
-            values.push(profileData.name);
+            values.push(profileData.name.trim());
         }
         if (profileData.language !== undefined) {
             updates.push('language = ?');
-            values.push(profileData.language);
+            values.push(profileData.language.trim());
         }
         if (profileData.description !== undefined) {
             updates.push('description = ?');
