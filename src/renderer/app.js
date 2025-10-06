@@ -312,9 +312,6 @@ async function handleProfileSubmit(e) {
             aiModel: formData.get('aiModel')?.trim() || null,
             envVariables: profileModal.getEnvVariablesFromForm(),
             githubRepo: {
-                owner: formData.get('githubOwner') || null,
-                repo: formData.get('githubRepo') || null,
-                branch: formData.get('githubBranch') || null,
                 owner: formData.get('githubOwner')?.trim() || null,
                 repo: formData.get('githubRepo')?.trim() || null,
                 branch: formData.get('githubBranch')?.trim() || null
