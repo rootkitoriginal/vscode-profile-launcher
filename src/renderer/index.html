@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VS Code Profile Launcher</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Monaco Editor CDN -->
+    <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/editor/editor.main.min.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1 class="app-title">VS Code Profile Launcher</h1>
+            </div>
+            <div class="header-right">
+                <button id="settingsBtn" class="btn btn-secondary">
+                    <span class="icon">⚙️</span>
+                    Settings
+                </button>
+                <button id="createProfileBtn" class="btn btn-primary">
+                    <span class="icon">+</span>
+                    New Profile
+                </button>
+            </div>
+        </header>
+
+        <!-- Search and Filter -->
+        <div class="search-section">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search profiles..." class="search-input">
+                <div class="filter-container">
+                    <select id="languageFilter" class="language-filter">
+                        <option value="">All Languages</option>
+                        <option value="TypeScript">TypeScript</option>
+                        <option value="JavaScript">JavaScript</option>
+                        <option value="Python">Python</option>
+                        <option value="Go">Go</option>
+                        <option value="Rust">Rust</option>
+                        <option value="C#">C#</option>
+                        <option value="Java">Java</option>
+                        <option value="C++">C++</option>
+                        <option value="PHP">PHP</option>
+                        <option value="Ruby">Ruby</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Profiles Grid -->
+            <div id="profilesGrid" class="profiles-grid">
+                <!-- Profiles will be dynamically inserted here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">📁</div>
+                <h2>No profiles found</h2>
+                <p>Create your first VS Code profile to get started</p>
+                <button class="btn btn-primary" onclick="showCreateProfileModal()">
+                    Create Profile
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button id="closeSettingsModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-tabs">
+                    <button class="tab-btn active" data-tab="ai">AI Configuration</button>
+                    <button class="tab-btn" data-tab="github">GitHub Integration</button>
+                    <button class="tab-btn" data-tab="general">General</button>
+                </div>
+                
+                <div id="aiTab" class="tab-content active">
+                    <div class="settings-section">
+                        <h3>AI Provider Settings</h3>
+                        <div class="form-group">
+                            <label for="geminiApiKey">Gemini API Key</label>
+                            <input type="password" id="geminiApiKey" class="form-input" placeholder="Enter your Gemini API key">
+                            <small class="form-hint">Get your API key from <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="openaiApiKey">OpenAI API Key</label>
+                            <input type="password" id="openaiApiKey" class="form-input" placeholder="Enter your OpenAI API key">
+                            <small class="form-hint">Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a></small>
+                        </div>
+                        <div class="provider-status">
+                            <div id="providerStatus"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="githubTab" class="tab-content">
+                    <div class="settings-section">
+                        <h3>GitHub Integration</h3>
+                        <div class="form-group">
+                            <label for="githubToken">GitHub Personal Access Token</label>
+                            <input type="password" id="githubToken" class="form-input" placeholder="Enter your GitHub token">
+                            <small class="form-hint">
+                                Create a token at <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings</a><br>
+                                Required scopes: repo, workflow, read:org
+                            </small>
+                        </div>
+                        <div class="github-status">
+                            <div id="githubStatus"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="generalTab" class="tab-content">
+                    <div class="settings-section">
+                        <h3>Application Settings</h3>
+                        <div class="form-group">
+                            <label for="vscodeCommand">VS Code Command</label>
+                            <input type="text" id="vscodeCommand" class="form-input" value="code">
+                            <small class="form-hint">Command to launch VS Code (e.g., 'code' or 'code-insiders')</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="cancelSettingsBtn" class="btn btn-secondary">Cancel</button>
+                <button type="button" id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Profile Modal -->
+    <div id="profileModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="modalTitle">Create New Profile</h2>
+                <button id="closeModal" class="close-btn">&times;</button>
+            </div>
+            <form id="profileForm" class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="profileName">Profile Name *</label>
+                        <input type="text" id="profileName" name="name" required class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="profileLanguage">Primary Language *</label>
+                        <select id="profileLanguage" name="language" required class="form-select">
+                            <option value="">Select a language...</option>
+                            <option value="TypeScript">TypeScript</option>
+                            <option value="JavaScript">JavaScript</option>
+                            <option value="Python">Python</option>
+                            <option value="Go">Go</option>
+                            <option value="Rust">Rust</option>
+                            <option value="C#">C#</option>
+                            <option value="Java">Java</option>
+                            <option value="C++">C++</option>
+                            <option value="PHP">PHP</option>
+                            <option value="Ruby">Ruby</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="profileDescription">Description</label>
+                    <textarea id="profileDescription" name="description" rows="2" class="form-textarea" placeholder="Optional description for this profile..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="workspacePath">Default Workspace Path</label>
+                    <div class="input-with-button">
+                        <input type="text" id="workspacePath" name="workspacePath" class="form-input" placeholder="e.g., /home/user/projects/my-project" readonly>
+                        <button type="button" id="selectWorkspacePath" class="btn btn-secondary btn-sm">Browse...</button>
+                    </div>
+                    <small class="form-hint">Optional: Path to open when launching VS Code</small>
+                </div>
+
+                <!-- GitHub Integration -->
+                <div class="form-section">
+                    <h4>GitHub Integration</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="githubOwner">Repository Owner</label>
+                            <input type="text" id="githubOwner" name="githubOwner" class="form-input" placeholder="e.g., username or organization">
+                            <small class="form-hint">GitHub username or organization name</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="githubRepo">Repository Name</label>
+                            <select id="githubRepo" name="githubRepo" class="form-select">
+                                <option value="">Select repository...</option>
+                            </select>
+                            <small class="form-hint">Repository name</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="githubBranch">Default Branch</label>
+                        <select id="githubBranch" name="githubBranch" class="form-select">
+                            <option value="">Select branch...</option>
+                        </select>
+                        <small class="form-hint">Optional: Default branch to use</small>
+                    </div>
+                </div>
+
+                <!-- AI Configuration -->
+                <div class="form-section">
+                    <h4>AI Assistant Configuration</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="aiProvider">AI Provider</label>
+                            <select id="aiProvider" name="aiProvider" class="form-select">
+                                <option value="">None</option>
+                                <option value="gemini">Google Gemini</option>
+                                <option value="openai">OpenAI</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="aiModel">AI Model</label>
+                            <select id="aiModel" name="aiModel" class="form-select">
+                                <option value="">Select model...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Environment Variables -->
+                <div class="form-section">
+                    <h4>Environment Variables</h4>
+                    <div id="envVariables" class="env-variables">
+                        <div class="env-var-row">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="addEnvVariable()">+ Add Variable</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" id="cancelBtn" class="btn btn-secondary">Cancel</button>
+                <button type="submit" form="profileForm" id="saveBtn" class="btn btn-primary">Save Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="contextMenu" class="context-menu" style="display: none;">
+        <ul>
+            <li id="editProfile">Edit Profile</li>
+            <li id="deleteProfile" class="danger">Delete Profile</li>
+        </ul>
+    </div>
+
+    <!-- GitHub Issues Modal -->
+    <div id="githubIssuesModal" class="modal" style="display: none;">
+        <div class="modal-content github-issues-modal">
+            <div class="modal-header">
+                <h3>GitHub Issues</h3>
+                <span class="modal-close" onclick="closeGitHubIssuesModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="github-controls">
+                    <div class="filter-controls">
+                        <button type="button" id="filterAll" class="btn btn-secondary btn-sm active">All</button>
+                        <button type="button" id="filterTodo" class="btn btn-secondary btn-sm">Todo</button>
+                        <button type="button" id="filterInProgress" class="btn btn-secondary btn-sm">In Progress</button>
+                    </div>
+                    <div class="action-controls">
+                        <button type="button" id="newIssueBtn" class="btn btn-primary btn-sm">+ New Issue</button>
+                        <button type="button" id="refreshIssuesBtn" class="btn btn-secondary btn-sm">Refresh</button>
+                    </div>
+                </div>
+                
+                <div class="branch-selection">
+                    <label for="branchSelect">Select Branch:</label>
+                    <select id="branchSelect" class="form-select">
+                        <option value="">Loading branches...</option>
+                    </select>
+                </div>
+
+                <div id="issuesList" class="issues-list">
+                    <div class="loading-spinner">Loading issues...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="cancelGitHubBtn" class="btn btn-secondary" onclick="closeGitHubIssuesModal()">Cancel</button>
+                <button type="button" id="openVSCodeBtn" class="btn btn-primary">Open VS Code</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Issue Modal -->
+    <div id="newIssueModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Issue</h3>
+                <span class="modal-close" onclick="closeNewIssueModal()">&times;</span>
+            </div>
+            <form id="newIssueForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="issueTitle">Title *</label>
+                        <input type="text" id="issueTitle" name="title" class="form-input" required placeholder="Issue title...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="issueBody">Description</label>
+                        <textarea id="issueBody" name="body" rows="6" class="form-textarea" placeholder="Describe the issue..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="issueLabels">Labels</label>
+                        <div class="labels-container">
+                            <div class="label-option">
+                                <input type="checkbox" id="labelBug" value="bug">
+                                <label for="labelBug" class="label-tag bug">bug</label>
+                            </div>
+                            <div class="label-option">
+                                <input type="checkbox" id="labelFeature" value="enhancement">
+                                <label for="labelFeature" class="label-tag feature">enhancement</label>
+                            </div>
+                            <div class="label-option">
+                                <input type="checkbox" id="labelTodo" value="todo">
+                                <label for="labelTodo" class="label-tag todo">todo</label>
+                            </div>
+                            <div class="label-option">
+                                <input type="checkbox" id="labelInProgress" value="in-progress">
+                                <label for="labelInProgress" class="label-tag in-progress">in-progress</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="cancelNewIssueBtn" class="btn btn-secondary" onclick="closeNewIssueModal()">Cancel</button>
+                    <button type="submit" id="createIssueBtn" class="btn btn-primary">Create Issue</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Monaco Editor Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
