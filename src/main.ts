@@ -9,14 +9,15 @@ import { ProfileController } from './controllers/ProfileController';
 import { SettingsController } from './controllers/SettingsController';
 import { AIController } from './controllers/AIController';
 import { GitHubController } from './controllers/GitHubController';
-import { Profile, AI_PROVIDERS } from './types';
+import { GitHubService } from './services/GitHubService';
+import { Profile, CreateProfileData, UpdateProfileData } from './types';
 
 class App {
     private mainWindow: BrowserWindow | null = null;
     private db: DatabaseService;
     private config: ConfigService;
     private aiManager: AIService;
-    private githubManager: any = null;
+    private githubManager: GitHubService | null = null;
 
     // Controllers
     private profileController: ProfileController;
@@ -102,13 +103,16 @@ class App {
             return this.profileController.getAllProfiles();
         });
 
-        ipcMain.handle('create-profile', async (_: IpcMainInvokeEvent, profileData: any) => {
-            return this.profileController.createProfile(profileData);
-        });
+        ipcMain.handle(
+            'create-profile',
+            async (_: IpcMainInvokeEvent, profileData: CreateProfileData) => {
+                return this.profileController.createProfile(profileData);
+            }
+        );
 
         ipcMain.handle(
             'update-profile',
-            async (_: IpcMainInvokeEvent, id: number, profileData: any) => {
+            async (_: IpcMainInvokeEvent, id: number, profileData: UpdateProfileData) => {
                 return this.profileController.updateProfile(id, profileData);
             }
         );

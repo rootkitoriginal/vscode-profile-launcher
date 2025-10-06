@@ -16,7 +16,7 @@ export class SettingsController {
     /**
      * Get all configuration settings
      */
-    async getConfig(): Promise<Record<string, any>> {
+    async getConfig(): Promise<Record<string, string | boolean | number>> {
         try {
             const config = this.configService.getAll();
             return {
