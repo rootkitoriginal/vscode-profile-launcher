@@ -128,24 +128,54 @@ Um launcher inteligente de profiles do VS Code construído com Electron, TypeScr
 
 ## 📁 Estrutura do Projeto
 
+O projeto segue o padrão arquitetural **MVC (Model-View-Controller)** para melhor organização e manutenibilidade.
+
 ```
 vscode-profile-launcher/
 ├── src/
+│   ├── controllers/         # Controllers MVC (lógica de negócio)
+│   │   ├── ProfileController.ts
+│   │   ├── SettingsController.ts
+│   │   ├── AIController.ts
+│   │   └── GitHubController.ts
+│   ├── models/              # Models MVC (modelos de dados)
+│   │   └── Profile.ts
+│   ├── services/            # Serviços externos
+│   │   ├── DatabaseService.ts
+│   │   ├── ConfigService.ts
+│   │   ├── AIService.ts
+│   │   └── GitHubService.ts
+│   ├── views/               # Views MVC (componentes UI)
+│   │   ├── components/
+│   │   └── pages/
+│   ├── utils/               # Utilitários
+│   ├── types.ts             # Definições de tipos TypeScript
 │   ├── main.ts              # Processo principal do Electron
 │   ├── preload.ts           # Script de preload (segurança)
-│   ├── database.ts          # Gerenciamento do SQLite
-│   ├── config.ts            # Configurações e variáveis de ambiente
-│   ├── ai-manager.ts        # Integração com APIs de IA
-│   ├── types.ts             # Definições de tipos TypeScript
 │   └── renderer/
 │       ├── index.html       # Interface principal
 │       ├── styles.css       # Estilos CSS
 │       └── app.js           # Lógica do frontend
+├── docs/                    # Documentação
+│   ├── architecture/        # Documentação de arquitetura
+│   ├── api/                 # Documentação de APIs
+│   ├── guides/              # Guias
+│   └── tech/                # Documentação técnica
+├── scripts/                 # Scripts auxiliares
+│   ├── build/
+│   ├── deploy/
+│   └── utils/
+├── tests/                   # Testes
+│   ├── unit/
+│   ├── integration/
+│   └── e2e/
 ├── dist/                    # Arquivos compilados
 ├── .env                     # Variáveis de ambiente
 ├── package.json             # Configurações do projeto
 └── tsconfig.json           # Configurações do TypeScript
 ```
+
+Para mais detalhes sobre a arquitetura MVC, consulte [docs/architecture/MVC-ARCHITECTURE.md](docs/architecture/MVC-ARCHITECTURE.md).
 
 ## 🔨 Scripts de Build
 

@@ -5,8 +5,8 @@ import { app } from 'electron';
 // Load environment variables
 dotenv.config();
 
-export class ConfigManager {
-    private static instance: ConfigManager;
+export class ConfigService {
+    private static instance: ConfigService;
     private config: Record<string, any>;
 
     private constructor() {
@@ -44,11 +44,11 @@ export class ConfigManager {
         };
     }
 
-    public static getInstance(): ConfigManager {
-        if (!ConfigManager.instance) {
-            ConfigManager.instance = new ConfigManager();
+    public static getInstance(): ConfigService {
+        if (!ConfigService.instance) {
+            ConfigService.instance = new ConfigService();
         }
-        return ConfigManager.instance;
+        return ConfigService.instance;
     }
 
     public get(key: string): any {
@@ -180,4 +180,4 @@ export class ConfigManager {
 }
 
 // Export default instance
-export default ConfigManager.getInstance();
+export default ConfigService.getInstance();

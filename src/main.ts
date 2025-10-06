@@ -2,22 +2,39 @@ import { app, BrowserWindow, ipcMain, shell, IpcMainInvokeEvent, dialog } from '
 import * as path from 'path';
 import * as fs from 'fs';
 import { spawn } from 'child_process';
-import { DatabaseManager } from './database';
-import { ConfigManager } from './config';
-import { AIManager } from './ai-manager';
+import { DatabaseService } from './services/DatabaseService';
+import { ConfigService } from './services/ConfigService';
+import { AIService } from './services/AIService';
+import { ProfileController } from './controllers/ProfileController';
+import { SettingsController } from './controllers/SettingsController';
+import { AIController } from './controllers/AIController';
+import { GitHubController } from './controllers/GitHubController';
 import { Profile, AI_PROVIDERS } from './types';
 
 class App {
     private mainWindow: BrowserWindow | null = null;
-    private db: DatabaseManager;
-    private config: ConfigManager;
-    private aiManager: AIManager;
+    private db: DatabaseService;
+    private config: ConfigService;
+    private aiManager: AIService;
     private githubManager: any = null;
+    
+    // Controllers
+    private profileController: ProfileController;
+    private settingsController: SettingsController;
+    private aiController: AIController;
+    private githubController: GitHubController;
 
     constructor() {
-        this.config = ConfigManager.getInstance();
-        this.db = new DatabaseManager();
-        this.aiManager = AIManager.getInstance();
+        this.config = ConfigService.getInstance();
+        this.db = new DatabaseService();
+        this.aiManager = AIService.getInstance();
+        
+        // Initialize controllers
+        this.profileController = new ProfileController(this.db);
+        this.settingsController = new SettingsController(this.config, this.aiManager);
+        this.aiController = new AIController(this.aiManager);
+        this.githubController = new GitHubController(null);
+        
         this.initialize();
     }
 
@@ -80,25 +97,25 @@ class App {
     }
 
     private setupIpcHandlers(): void {
-        // Profile management handlers
+        // Profile management handlers - Using ProfileController
         ipcMain.handle('get-profiles', async () => {
-            return this.db.getAllProfiles();
+            return this.profileController.getAllProfiles();
         });
 
         ipcMain.handle('create-profile', async (_: IpcMainInvokeEvent, profileData: any) => {
-            return this.db.createProfile(profileData);
+            return this.profileController.createProfile(profileData);
         });
 
         ipcMain.handle('update-profile', async (_: IpcMainInvokeEvent, id: number, profileData: any) => {
-            return this.db.updateProfile(id, profileData);
+            return this.profileController.updateProfile(id, profileData);
         });
 
         ipcMain.handle('delete-profile', async (_: IpcMainInvokeEvent, id: number) => {
-            return this.db.deleteProfile(id);
+            return this.profileController.deleteProfile(id);
         });
 
         ipcMain.handle('get-profile', async (_: IpcMainInvokeEvent, id: number) => {
-            return this.db.getProfile(id);
+            return this.profileController.getProfile(id);
         });
 
         // VS Code launch handler
@@ -106,66 +123,48 @@ class App {
             return this.launchVSCode(profile);
         });
 
-        // Profile path info
+        // Profile path info - Using SettingsController
         ipcMain.handle('get-profile-paths', async (_: IpcMainInvokeEvent, profileName: string) => {
-            const profileSlug = this.config.createProfileSlug(profileName);
-            return this.config.getProfilePath(profileSlug);
+            return this.settingsController.getProfilePaths(profileName);
         });
 
-        // AI and configuration handlers
+        // AI and configuration handlers - Using AIController and SettingsController
         ipcMain.handle('get-ai-providers', async () => {
-            return AI_PROVIDERS;
+            return this.aiController.getAIProviders();
         });
 
         ipcMain.handle('get-config', async () => {
-            const config = this.config.getAll();
-            // Include current API key status (but not the actual keys for security)
-            return {
-                ...config,
-                hasGeminiKey: this.config.hasValidGeminiKey(),
-                hasOpenaiKey: this.config.hasValidOpenaiKey()
-            };
+            return this.settingsController.getConfig();
         });
 
         ipcMain.handle('get-api-keys', async () => {
-            return {
-                geminiApiKey: this.config.getApiKey('gemini'),
-                openaiApiKey: this.config.getApiKey('openai')
-            };
+            return this.settingsController.getApiKeys();
         });
 
         ipcMain.handle('update-api-key', async (_: IpcMainInvokeEvent, provider: 'gemini' | 'openai', apiKey: string) => {
-            try {
-                this.aiManager.updateApiKey(provider, apiKey);
-                await this.config.saveApiKeys();
-                return true;
-            } catch (error) {
-                console.error('Failed to save API key:', error);
-                return false;
-            }
+            return this.settingsController.updateApiKey(provider, apiKey);
         });
 
         ipcMain.handle('generate-code-template', async (_: IpcMainInvokeEvent, language: string, projectName: string, description?: string, preferredProvider?: 'gemini' | 'openai', preferredModel?: string) => {
-            return this.aiManager.generateCodeTemplate(language, projectName, description, preferredProvider, preferredModel);
+            return this.aiController.generateCodeTemplate(language, projectName, description, preferredProvider, preferredModel);
         });
 
         ipcMain.handle('generate-code', async (_: IpcMainInvokeEvent, request: any) => {
-            return this.aiManager.generateCode(request);
+            return this.aiController.generateCode(request);
         });
 
         ipcMain.handle('get-available-providers', async () => {
-            return this.aiManager.getAvailableProviders();
+            return this.aiController.getAvailableProviders();
         });
 
-        // GitHub Integration Handlers
+        // GitHub Integration Handlers - Using SettingsController and GitHubController
         ipcMain.handle('update-github-token', async (_: IpcMainInvokeEvent, token: string) => {
             try {
-                this.config.updateGitHubToken(token);
+                await this.settingsController.updateGitHubToken(token);
                 await this.initGitHubManager();
                 if (this.githubManager) {
                     await this.githubManager.updateToken(token);
                 }
-                await this.config.saveApiKeys();
                 return true;
             } catch (error) {
                 console.error('Failed to save GitHub token:', error);
@@ -174,71 +173,32 @@ class App {
         });
 
         ipcMain.handle('get-github-token', async () => {
-            return this.config.getGitHubToken();
+            return this.settingsController.getGitHubToken();
         });
 
         ipcMain.handle('github-list-issues', async (_: IpcMainInvokeEvent, owner: string, repo: string, state?: 'open' | 'closed') => {
-            try {
-                await this.initGitHubManager();
-                if (!this.githubManager) {
-                    throw new Error('GitHub not configured');
-                }
-                return await this.githubManager.listIssues(owner, repo, state);
-            } catch (error) {
-                console.error('Failed to list GitHub issues:', error);
-                throw error;
-            }
+            await this.initGitHubManager();
+            return this.githubController.listIssues(owner, repo, state);
         });
 
         ipcMain.handle('github-create-issue', async (_: IpcMainInvokeEvent, owner: string, repo: string, title: string, body: string, labels?: string[]) => {
-            try {
-                await this.initGitHubManager();
-                if (!this.githubManager) {
-                    throw new Error('GitHub not configured');
-                }
-                return await this.githubManager.createIssue(owner, repo, title, body, labels);
-            } catch (error) {
-                console.error('Failed to create GitHub issue:', error);
-                throw error;
-            }
+            await this.initGitHubManager();
+            return this.githubController.createIssue(owner, repo, title, body, labels);
         });
 
         ipcMain.handle('github-list-branches', async (_: IpcMainInvokeEvent, owner: string, repo: string) => {
-            try {
-                await this.initGitHubManager();
-                if (!this.githubManager) {
-                    throw new Error('GitHub not configured');
-                }
-                return await this.githubManager.listBranches(owner, repo);
-            } catch (error) {
-                console.error('Failed to list GitHub branches:', error);
-                throw error;
-            }
+            await this.initGitHubManager();
+            return this.githubController.listBranches(owner, repo);
         });
 
         ipcMain.handle('github-validate-repo', async (_: IpcMainInvokeEvent, owner: string, repo: string) => {
-            try {
-                await this.initGitHubManager();
-                if (!this.githubManager) {
-                    return false;
-                }
-                return await this.githubManager.validateRepository(owner, repo);
-            } catch (error) {
-                console.error('Failed to validate GitHub repository:', error);
-                return false;
-            }
+            await this.initGitHubManager();
+            return this.githubController.validateRepository(owner, repo);
         });
 
         ipcMain.handle('is-github-configured', async () => {
-            try {
-                await this.initGitHubManager();
-                if (!this.githubManager) {
-                    return false;
-                }
-                return await this.githubManager.isConfigured();
-            } catch (error) {
-                return false;
-            }
+            await this.initGitHubManager();
+            return this.githubController.isConfigured();
         });
 
         // Directory picker handler
@@ -251,24 +211,17 @@ class App {
 
         // GitHub repository listing handler
         ipcMain.handle('github-list-repos', async (_: IpcMainInvokeEvent, owner: string) => {
-            try {
-                await this.initGitHubManager();
-                if (!this.githubManager) {
-                    throw new Error('GitHub not configured');
-                }
-                return await this.githubManager.listRepositories(owner);
-            } catch (error) {
-                console.error('Failed to list GitHub repositories:', error);
-                throw error;
-            }
+            await this.initGitHubManager();
+            return this.githubController.listRepositories();
         });
     }
 
     private async initGitHubManager() {
         if (!this.githubManager) {
             try {
-                const githubModule = await import('./github-manager');
+                const githubModule = await import('./services/GitHubService');
                 this.githubManager = githubModule.default;
+                this.githubController.updateService(this.githubManager);
             } catch (error) {
                 console.error('Failed to load GitHub manager:', error);
             }
@@ -305,7 +258,7 @@ class App {
             vscode.unref();
             
             // Update last used timestamp
-            this.db.updateLastUsed(profile.id!);
+            await this.profileController.updateLastUsed(profile.id!);
             
             return true;
         } catch (error) {
