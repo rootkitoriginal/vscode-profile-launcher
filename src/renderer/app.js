@@ -287,8 +287,8 @@ async function handleProfileSubmit(e) {
         const formData = new FormData(e.target);
         
         // Get and validate required fields
-        const name = formData.get('profileName')?.trim();
-        const language = formData.get('profileLanguage')?.trim();
+        const name = formData.get('name')?.trim();
+        const language = formData.get('language')?.trim();
         
         console.log('📝 Form data:', { name, language });
         
@@ -303,7 +303,7 @@ async function handleProfileSubmit(e) {
         const profileData = {
             name: name,
             language: language,
-            description: formData.get('profileDescription')?.trim() || null,
+            description: formData.get('description')?.trim() || null,
             workspacePath: formData.get('workspacePath')?.trim() || null,
             aiProvider: formData.get('aiProvider')?.trim() || null,
             aiModel: formData.get('aiModel')?.trim() || null,
