@@ -22,7 +22,9 @@ export class AIController {
     /**
      * Get available AI providers based on configured API keys
      */
-    async getAvailableProviders(): Promise<Array<{ name: 'gemini' | 'openai'; configured: boolean }>> {
+    async getAvailableProviders(): Promise<
+        Array<{ name: 'gemini' | 'openai'; configured: boolean }>
+    > {
         try {
             return this.aiService.getAvailableProviders();
         } catch (error) {

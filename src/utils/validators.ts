@@ -16,12 +16,12 @@ export function isValidProfileName(name: string): boolean {
     if (!isNonEmptyString(name)) {
         return false;
     }
-    
+
     // Profile name should be between 1 and 100 characters
     if (name.length > 100) {
         return false;
     }
-    
+
     // Only allow alphanumeric, spaces, dashes, and underscores
     const validPattern = /^[a-zA-Z0-9\s\-_]+$/;
     return validPattern.test(name);
@@ -34,7 +34,7 @@ export function isValidPath(path: string): boolean {
     if (!isNonEmptyString(path)) {
         return false;
     }
-    
+
     // Basic path validation - more thorough checking should be done in the service layer
     return path.length > 0 && !path.includes('..'); // Prevent path traversal
 }

@@ -30,7 +30,7 @@ export class DatabaseService {
                 lastUsed DATETIME
             )
         `;
-        
+
         this.db.exec(createTableQuery);
 
         // Add new columns if they don't exist (for existing databases)
@@ -39,7 +39,7 @@ export class DatabaseService {
             'ALTER TABLE profiles ADD COLUMN aiModel TEXT',
             'ALTER TABLE profiles ADD COLUMN envVariables TEXT',
             'ALTER TABLE profiles ADD COLUMN codeTemplate TEXT',
-            'ALTER TABLE profiles ADD COLUMN githubRepo TEXT'
+            'ALTER TABLE profiles ADD COLUMN githubRepo TEXT',
         ];
 
         alterTableQueries.forEach(query => {
@@ -59,14 +59,14 @@ export class DatabaseService {
     public getAllProfiles(): Profile[] {
         const query = 'SELECT * FROM profiles ORDER BY lastUsed DESC, createdAt DESC';
         const rows = this.db.prepare(query).all() as any[];
-        
+
         return rows.map(this.mapRowToProfile);
     }
 
     public getProfile(id: number): Profile | null {
         const query = 'SELECT * FROM profiles WHERE id = ?';
         const row = this.db.prepare(query).get(id) as any;
-        
+
         return row ? this.mapRowToProfile(row) : null;
     }
 
@@ -75,23 +75,31 @@ export class DatabaseService {
             INSERT INTO profiles (name, language, description, workspacePath, extensions, aiProvider, aiModel, envVariables, codeTemplate, githubRepo)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
-        
-        const extensionsJson = profileData.extensions ? JSON.stringify(profileData.extensions) : null;
-        const envVariablesJson = profileData.envVariables ? JSON.stringify(profileData.envVariables) : null;
-        const githubRepoJson = profileData.githubRepo ? JSON.stringify(profileData.githubRepo) : null;
-        
-        const result = this.db.prepare(query).run(
-            profileData.name,
-            profileData.language,
-            profileData.description || null,
-            profileData.workspacePath || null,
-            extensionsJson,
-            profileData.aiProvider || null,
-            profileData.aiModel || null,
-            envVariablesJson,
-            profileData.codeTemplate || null,
-            githubRepoJson
-        );
+
+        const extensionsJson = profileData.extensions
+            ? JSON.stringify(profileData.extensions)
+            : null;
+        const envVariablesJson = profileData.envVariables
+            ? JSON.stringify(profileData.envVariables)
+            : null;
+        const githubRepoJson = profileData.githubRepo
+            ? JSON.stringify(profileData.githubRepo)
+            : null;
+
+        const result = this.db
+            .prepare(query)
+            .run(
+                profileData.name,
+                profileData.language,
+                profileData.description || null,
+                profileData.workspacePath || null,
+                extensionsJson,
+                profileData.aiProvider || null,
+                profileData.aiModel || null,
+                envVariablesJson,
+                profileData.codeTemplate || null,
+                githubRepoJson
+            );
 
         const newProfile = this.getProfile(result.lastInsertRowid as number);
         if (!newProfile) {
@@ -161,7 +169,7 @@ export class DatabaseService {
 
         values.push(id);
         const query = `UPDATE profiles SET ${updates.join(', ')} WHERE id = ?`;
-        
+
         this.db.prepare(query).run(...values);
         return this.getProfile(id);
     }
@@ -169,7 +177,7 @@ export class DatabaseService {
     public deleteProfile(id: number): boolean {
         const query = 'DELETE FROM profiles WHERE id = ?';
         const result = this.db.prepare(query).run(id);
-        
+
         return result.changes > 0;
     }
 
@@ -179,17 +187,18 @@ export class DatabaseService {
             WHERE name LIKE ? OR language LIKE ? OR description LIKE ?
             ORDER BY lastUsed DESC, createdAt DESC
         `;
-        
+
         const term = `%${searchTerm}%`;
         const rows = this.db.prepare(query).all(term, term, term) as any[];
-        
+
         return rows.map(this.mapRowToProfile);
     }
 
     public getProfilesByLanguage(language: string): Profile[] {
-        const query = 'SELECT * FROM profiles WHERE language = ? ORDER BY lastUsed DESC, createdAt DESC';
+        const query =
+            'SELECT * FROM profiles WHERE language = ? ORDER BY lastUsed DESC, createdAt DESC';
         const rows = this.db.prepare(query).all(language) as any[];
-        
+
         return rows.map(this.mapRowToProfile);
     }
 
@@ -212,7 +221,7 @@ export class DatabaseService {
             codeTemplate: row.codeTemplate,
             githubRepo: row.githubRepo ? JSON.parse(row.githubRepo) : undefined,
             createdAt: row.createdAt,
-            lastUsed: row.lastUsed
+            lastUsed: row.lastUsed,
         };
     }
 

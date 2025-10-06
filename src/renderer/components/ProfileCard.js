@@ -19,15 +19,15 @@ export class ProfileCard {
         const card = document.createElement('div');
         card.className = 'profile-card';
         card.dataset.profileId = profile.id;
-        
-        const lastUsed = profile.lastUsed 
+
+        const lastUsed = profile.lastUsed
             ? `Last used: ${formatDate(profile.lastUsed)}`
             : `Created: ${formatDate(profile.createdAt)}`;
-        
-        const aiInfo = profile.aiProvider 
-            ? `<span class="ai-badge">${profile.aiProvider.toUpperCase()}</span>` 
+
+        const aiInfo = profile.aiProvider
+            ? `<span class="ai-badge">${profile.aiProvider.toUpperCase()}</span>`
             : '';
-        
+
         card.innerHTML = `
             <div class="profile-header">
                 <h3 class="profile-name">${escapeHtml(profile.name)}${aiInfo}</h3>
@@ -40,24 +40,24 @@ export class ProfileCard {
                 <span>${lastUsed}</span>
             </div>
         `;
-        
+
         // Attach event handlers
         if (handlers.onLaunch) {
             card.addEventListener('dblclick', () => handlers.onLaunch(profile));
         }
-        
+
         if (handlers.onContextMenu) {
-            card.addEventListener('contextmenu', (e) => handlers.onContextMenu(e, profile));
+            card.addEventListener('contextmenu', e => handlers.onContextMenu(e, profile));
         }
-        
+
         const menuBtn = card.querySelector('.profile-menu');
         if (menuBtn && handlers.onMenuClick) {
-            menuBtn.addEventListener('click', (e) => {
+            menuBtn.addEventListener('click', e => {
                 e.stopPropagation();
                 handlers.onMenuClick(e, profile);
             });
         }
-        
+
         return card;
     }
 
@@ -74,7 +74,7 @@ export class ProfileCard {
         }
 
         container.innerHTML = '';
-        
+
         if (profiles.length === 0) {
             const emptyState = document.getElementById('emptyState');
             if (emptyState) {
@@ -82,12 +82,12 @@ export class ProfileCard {
             }
             return;
         }
-        
+
         const emptyState = document.getElementById('emptyState');
         if (emptyState) {
             emptyState.style.display = 'none';
         }
-        
+
         profiles.forEach(profile => {
             const card = ProfileCard.create(profile, handlers);
             container.appendChild(card);

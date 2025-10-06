@@ -20,7 +20,11 @@ export class GitHubController {
     /**
      * List issues for a repository
      */
-    async listIssues(owner: string, repo: string, state?: 'open' | 'closed'): Promise<GitHubIssue[]> {
+    async listIssues(
+        owner: string,
+        repo: string,
+        state?: 'open' | 'closed'
+    ): Promise<GitHubIssue[]> {
         try {
             if (!this.githubService) {
                 throw new Error('GitHub service not initialized');

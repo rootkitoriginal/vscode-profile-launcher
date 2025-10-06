@@ -51,7 +51,7 @@ export class Profile {
 
         return {
             valid: errors.length === 0,
-            errors
+            errors,
         };
     }
 
@@ -72,7 +72,7 @@ export class Profile {
             codeTemplate: this.codeTemplate,
             githubRepo: this.githubRepo,
             createdAt: this.createdAt,
-            lastUsed: this.lastUsed
+            lastUsed: this.lastUsed,
         };
     }
 }
