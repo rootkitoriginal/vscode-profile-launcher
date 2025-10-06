@@ -15,18 +15,18 @@ export class MonacoEditor {
      * @returns {Promise<void>}
      */
     static async initialize() {
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
             if (window.monaco) {
                 resolve();
                 return;
             }
 
-            require.config({ 
-                paths: { 
-                    'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' 
-                }
+            require.config({
+                paths: {
+                    vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs',
+                },
             });
-            
+
             require(['vs/editor/editor.main'], () => {
                 resolve();
             });
@@ -55,7 +55,7 @@ export class MonacoEditor {
         if (this.editor) {
             this.editor.dispose();
         }
-        
+
         this.editor = monaco.editor.create(container, {
             value: value,
             language: this.getMonacoLanguage(language),
@@ -65,9 +65,9 @@ export class MonacoEditor {
             scrollBeyondLastLine: false,
             fontSize: 13,
             lineHeight: 20,
-            wordWrap: 'on'
+            wordWrap: 'on',
         });
-        
+
         // Update hidden textarea when editor content changes
         this.editor.onDidChangeModelContent(() => {
             const codeTemplate = document.getElementById('codeTemplate');
@@ -75,7 +75,7 @@ export class MonacoEditor {
                 codeTemplate.value = this.editor.getValue();
             }
         });
-        
+
         this.isInitialized = true;
         return this.editor;
     }
@@ -87,18 +87,18 @@ export class MonacoEditor {
      */
     getMonacoLanguage(language) {
         const languageMap = {
-            'TypeScript': 'typescript',
-            'JavaScript': 'javascript',
-            'Python': 'python',
-            'Go': 'go',
-            'Rust': 'rust',
+            TypeScript: 'typescript',
+            JavaScript: 'javascript',
+            Python: 'python',
+            Go: 'go',
+            Rust: 'rust',
             'C#': 'csharp',
-            'Java': 'java',
+            Java: 'java',
             'C++': 'cpp',
-            'PHP': 'php',
-            'Ruby': 'ruby'
+            PHP: 'php',
+            Ruby: 'ruby',
         };
-        
+
         return languageMap[language] || 'plaintext';
     }
 

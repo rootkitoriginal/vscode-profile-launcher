@@ -45,7 +45,7 @@ async function initializeComponents() {
     settingsModal = new SettingsModal();
     githubModal = new GitHubModal();
     monacoEditor = new MonacoEditor();
-    
+
     // Initialize Monaco Editor library
     await MonacoEditor.initialize();
 }
@@ -56,24 +56,23 @@ async function initializeComponents() {
 async function loadInitialData() {
     try {
         showLoading();
-        
+
         // Load profiles, AI providers, and config in parallel
         const [profilesData, providersData, configData] = await Promise.all([
             window.electronAPI.getProfiles(),
             window.electronAPI.getAIProviders(),
-            window.electronAPI.getConfig()
+            window.electronAPI.getConfig(),
         ]);
-        
+
         profiles = profilesData;
         aiProviders = providersData;
         appConfig = configData;
-        
+
         // Set component data
         profileModal.setAIProviders(aiProviders);
         settingsModal.setAppConfig(appConfig);
-        
+
         renderProfiles();
-        
     } catch (error) {
         console.error('Failed to load initial data:', error);
         showError('Failed to load application data');
@@ -89,7 +88,7 @@ function renderProfiles(profilesToRender = profiles) {
     ProfileCard.renderGrid(profilesGrid, profilesToRender, {
         onLaunch: launchVSCode,
         onContextMenu: showContextMenu,
-        onMenuClick: showContextMenu
+        onMenuClick: showContextMenu,
     });
 }
 
@@ -101,11 +100,11 @@ function setupEventListeners() {
     document.getElementById('createProfileBtn').addEventListener('click', () => {
         profileModal.showCreate();
     });
-    
+
     document.getElementById('settingsBtn').addEventListener('click', async () => {
         await settingsModal.show();
     });
-    
+
     // Profile modal controls
     document.getElementById('closeModal').addEventListener('click', () => {
         profileModal.hide();
@@ -114,7 +113,7 @@ function setupEventListeners() {
         profileModal.hide();
     });
     document.getElementById('profileForm').addEventListener('submit', handleProfileSubmit);
-    
+
     // Settings modal controls
     document.getElementById('closeSettingsModal').addEventListener('click', () => {
         settingsModal.hide();
@@ -128,14 +127,14 @@ function setupEventListeners() {
         aiProviders = await window.electronAPI.getAIProviders();
         profileModal.setAIProviders(aiProviders);
     });
-    
+
     // Settings tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', e => {
             settingsModal.switchTab(e.target.dataset.tab);
         });
     });
-    
+
     // Search and filter
     if (searchInput) {
         searchInput.addEventListener('input', filterProfiles);
@@ -143,52 +142,52 @@ function setupEventListeners() {
     if (languageFilter) {
         languageFilter.addEventListener('change', filterProfiles);
     }
-    
+
     // Context menu
     document.getElementById('editProfile').addEventListener('click', handleEditProfile);
     document.getElementById('deleteProfile').addEventListener('click', handleDeleteProfile);
-    
+
     // AI provider change
-    document.getElementById('aiProvider')?.addEventListener('change', (e) => {
+    document.getElementById('aiProvider')?.addEventListener('change', e => {
         profileModal.updateAIModels(e.target.value);
     });
     // Directory picker
     document.getElementById('selectWorkspacePath')?.addEventListener('click', selectWorkspacePath);
-    
+
     // GitHub repository selection
     document.getElementById('githubOwner')?.addEventListener('blur', handleGitHubOwnerChange);
     document.getElementById('githubRepo')?.addEventListener('change', handleGitHubRepoChange);
-    
+
     // Environment variable add button
     document.getElementById('addEnvVarBtn')?.addEventListener('click', () => {
         profileModal.addEnvVariable();
     });
-    
+
     // Close menus when clicking outside
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', e => {
         if (contextMenu && !contextMenu.contains(e.target)) {
             hideContextMenu();
         }
     });
-    
+
     // Close modals when clicking outside
     const profileModalElement = document.getElementById('profileModal');
     const settingsModalElement = document.getElementById('settingsModal');
-    
-    profileModalElement?.addEventListener('click', (e) => {
+
+    profileModalElement?.addEventListener('click', e => {
         if (e.target === profileModalElement) {
             profileModal.hide();
         }
     });
-    
-    settingsModalElement?.addEventListener('click', (e) => {
+
+    settingsModalElement?.addEventListener('click', e => {
         if (e.target === settingsModalElement) {
             settingsModal.hide();
         }
     });
-    
+
     // Escape key handling
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             profileModal.hide();
             settingsModal.hide();
@@ -204,20 +203,21 @@ function setupEventListeners() {
 function filterProfiles() {
     const searchTerm = searchInput.value.toLowerCase();
     const selectedLanguage = languageFilter.value;
-    
+
     let filtered = profiles;
-    
+
     if (searchTerm) {
-        filtered = filtered.filter(profile =>
-            profile.name.toLowerCase().includes(searchTerm) ||
-            (profile.description && profile.description.toLowerCase().includes(searchTerm))
+        filtered = filtered.filter(
+            profile =>
+                profile.name.toLowerCase().includes(searchTerm) ||
+                (profile.description && profile.description.toLowerCase().includes(searchTerm))
         );
     }
-    
+
     if (selectedLanguage) {
         filtered = filtered.filter(profile => profile.language === selectedLanguage);
     }
-    
+
     renderProfiles(filtered);
 }
 
@@ -227,9 +227,9 @@ function filterProfiles() {
 function showContextMenu(e, profile) {
     e.preventDefault();
     e.stopPropagation();
-    
+
     currentContextProfile = profile;
-    
+
     if (contextMenu) {
         contextMenu.style.display = 'block';
         contextMenu.style.left = e.pageX + 'px';
@@ -246,23 +246,27 @@ function hideContextMenu() {
 
 function handleEditProfile() {
     if (currentContextProfile) {
-        profileModal.showEdit(currentContextProfile, handleGitHubOwnerChange, handleGitHubRepoChange);
+        profileModal.showEdit(
+            currentContextProfile,
+            handleGitHubOwnerChange,
+            handleGitHubRepoChange
+        );
         hideContextMenu();
     }
 }
 
 async function handleDeleteProfile() {
     if (!currentContextProfile) return;
-    
+
     if (confirm(`Are you sure you want to delete the profile "${currentContextProfile.name}"?`)) {
         try {
             showLoading();
             await window.electronAPI.deleteProfile(currentContextProfile.id);
-            
+
             // Reload profiles
             profiles = await window.electronAPI.getProfiles();
             renderProfiles();
-            
+
             showSuccess('Profile deleted successfully!');
             hideContextMenu();
         } catch (error) {
@@ -279,11 +283,10 @@ async function handleDeleteProfile() {
  */
 async function handleProfileSubmit(e) {
     e.preventDefault();
-    
+
     try {
         showLoading();
         console.log('🚀 Starting profile submit...');
-        
         const formData = new FormData(e.target);
         
         // Get and validate required fields
@@ -328,15 +331,14 @@ async function handleProfileSubmit(e) {
             console.log('✅ Profile created:', result);
             showSuccess('Profile created successfully!');
         }
-        
+
         // Reload profiles
         console.log('🔄 Reloading profiles...');
         profiles = await window.electronAPI.getProfiles();
         console.log('📦 Loaded profiles:', profiles.length);
         renderProfiles();
-        
+
         profileModal.hide();
-        
     } catch (error) {
         console.error('❌ Failed to save profile:', error);
         showError(error.message || 'Failed to save profile');
@@ -352,14 +354,14 @@ async function launchVSCode(profile) {
     try {
         showLoading();
         await window.electronAPI.launchVSCode(profile);
-        
+
         // Update last used timestamp
         await window.electronAPI.updateLastUsed(profile.id);
-        
+
         // Reload profiles
         profiles = await window.electronAPI.getProfiles();
         renderProfiles();
-        
+
         showSuccess(`Launched VS Code with profile: ${profile.name}`);
     } catch (error) {
         console.error('Failed to launch VS Code:', error);
@@ -390,15 +392,15 @@ async function handleGitHubOwnerChange(e) {
     const owner = e.target.value.trim();
     const repoSelect = document.getElementById('githubRepo');
     const branchSelect = document.getElementById('githubBranch');
-    
+
     if (!owner || !repoSelect) return;
-    
+
     try {
         repoSelect.innerHTML = '<option value="">Loading...</option>';
         if (branchSelect) branchSelect.innerHTML = '<option value="">Select branch...</option>';
-        
+
         const repos = await window.electronAPI.githubListRepositories(owner);
-        
+
         repoSelect.innerHTML = '<option value="">Select repository...</option>';
         repos.forEach(repo => {
             const option = document.createElement('option');
@@ -416,14 +418,14 @@ async function handleGitHubRepoChange(e) {
     const owner = document.getElementById('githubOwner')?.value.trim();
     const repo = e.target.value;
     const branchSelect = document.getElementById('githubBranch');
-    
+
     if (!owner || !repo || !branchSelect) return;
-    
+
     try {
         branchSelect.innerHTML = '<option value="">Loading...</option>';
-        
+
         const branches = await window.electronAPI.githubListBranches(owner, repo);
-        
+
         branchSelect.innerHTML = '<option value="">Select branch...</option>';
         branches.forEach(branch => {
             const option = document.createElement('option');
@@ -449,5 +451,5 @@ window.app = {
     reload: async () => {
         profiles = await window.electronAPI.getProfiles();
         renderProfiles();
-    }
+    },
 };

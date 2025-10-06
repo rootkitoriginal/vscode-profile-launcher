@@ -31,3 +31,19 @@ logs
 app/dist/
 release/
 *.backup
+
+# Testing
+coverage/
+*.lcov
+.nyc_output/
+junit.xml
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS specific
+*.swp
+*.swo
+*~

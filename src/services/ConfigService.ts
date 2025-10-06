@@ -14,33 +14,33 @@ export class ConfigService {
             // AI API Keys
             geminiApiKey: process.env.GEMINI_API_KEY || '',
             openaiApiKey: process.env.OPENAI_API_KEY || '',
-            
+
             // GitHub Settings
             githubToken: process.env.GITHUB_TOKEN || '',
-            
+
             // Default AI Settings
             defaultAiProvider: process.env.DEFAULT_AI_PROVIDER || 'gemini',
             defaultGeminiModel: process.env.DEFAULT_GEMINI_MODEL || 'gemini-1.5-flash',
             defaultOpenaiModel: process.env.DEFAULT_OPENAI_MODEL || 'gpt-3.5-turbo',
-            
+
             // Application Settings
             appName: process.env.APP_NAME || 'VS Code Profile Launcher',
             appVersion: process.env.APP_VERSION || '1.0.0',
             debugMode: process.env.DEBUG_MODE === 'true',
-            
+
             // VS Code Settings
             vscodeCommand: process.env.VSCODE_COMMAND || 'code',
             vscodeInsidersCommand: process.env.VSCODE_INSIDERS_COMMAND || 'code-insiders',
-            
+
             // Database Settings
             dbName: process.env.DB_NAME || 'profiles.db',
-            
+
             // VS Code Profile Settings
             profilesBaseDir: process.env.PROFILES_BASE_DIR || '/home/rootkit/profiles',
-            
+
             // Paths
             userDataPath: app.getPath('userData'),
-            tempPath: app.getPath('temp')
+            tempPath: app.getPath('temp'),
         };
     }
 
@@ -102,7 +102,7 @@ export class ConfigService {
     public async saveApiKeys(): Promise<void> {
         const fs = require('fs').promises;
         const path = require('path');
-        
+
         try {
             // Save to a config file in user data directory
             const configPath = path.join(this.config.userDataPath, 'app-config.json');
@@ -110,9 +110,9 @@ export class ConfigService {
                 geminiApiKey: this.config.geminiApiKey,
                 openaiApiKey: this.config.openaiApiKey,
                 githubToken: this.config.githubToken,
-                lastUpdated: new Date().toISOString()
+                lastUpdated: new Date().toISOString(),
             };
-            
+
             await fs.writeFile(configPath, JSON.stringify(configData, null, 2));
         } catch (error) {
             console.error('Failed to save API keys:', error);
@@ -123,10 +123,10 @@ export class ConfigService {
     public async loadApiKeys(): Promise<void> {
         const fs = require('fs').promises;
         const path = require('path');
-        
+
         try {
             const configPath = path.join(this.config.userDataPath, 'app-config.json');
-            
+
             // Check if config file exists
             try {
                 await fs.access(configPath);
@@ -134,9 +134,9 @@ export class ConfigService {
                 // File doesn't exist, that's OK
                 return;
             }
-            
+
             const configData = JSON.parse(await fs.readFile(configPath, 'utf8'));
-            
+
             if (configData.geminiApiKey) {
                 this.config.geminiApiKey = configData.geminiApiKey;
             }
@@ -174,7 +174,7 @@ export class ConfigService {
         return {
             baseDir,
             dataDir: path.join(baseDir, 'data'),
-            extensionsDir: path.join(baseDir, 'extensions')
+            extensionsDir: path.join(baseDir, 'extensions'),
         };
     }
 }

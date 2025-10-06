@@ -51,10 +51,10 @@ export const SUPPORTED_LANGUAGES = [
     'Java',
     'C++',
     'PHP',
-    'Ruby'
+    'Ruby',
 ] as const;
 
-export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
+export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 export interface AIProvider {
     name: 'gemini' | 'openai';
@@ -73,25 +73,41 @@ export const AI_PROVIDERS: AIProvider[] = [
         name: 'gemini',
         displayName: 'Google Gemini',
         models: [
-            { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash', description: 'Latest experimental flash model' },
-            { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast and efficient model' },
+            {
+                id: 'gemini-2.0-flash-exp',
+                name: 'Gemini 2.0 Flash',
+                description: 'Latest experimental flash model',
+            },
+            {
+                id: 'gemini-1.5-flash',
+                name: 'Gemini 1.5 Flash',
+                description: 'Fast and efficient model',
+            },
             { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Most capable model' },
-            { id: 'gemini-1.0-pro', name: 'Gemini 1.0 Pro', description: 'Previous generation model' }
-        ]
+            {
+                id: 'gemini-1.0-pro',
+                name: 'Gemini 1.0 Pro',
+                description: 'Previous generation model',
+            },
+        ],
     },
     {
         name: 'openai',
         displayName: 'OpenAI',
         models: [
             { id: 'gpt-4', name: 'GPT-4', description: 'Most capable GPT model' },
-            { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Enhanced GPT-4 with larger context' },
-            { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Fast and cost-effective' }
-        ]
-    }
+            {
+                id: 'gpt-4-turbo',
+                name: 'GPT-4 Turbo',
+                description: 'Enhanced GPT-4 with larger context',
+            },
+            { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Fast and cost-effective' },
+        ],
+    },
 ];
 
 export const DEFAULT_CODE_TEMPLATES: Record<string, string> = {
-    'TypeScript': `// TypeScript Project Template
+    TypeScript: `// TypeScript Project Template
 export class HelloWorld {
     private message: string;
 
@@ -107,7 +123,7 @@ export class HelloWorld {
 const app = new HelloWorld();
 app.greet();
 `,
-    'JavaScript': `// JavaScript Project Template
+    JavaScript: `// JavaScript Project Template
 class HelloWorld {
     constructor(message = "Hello, JavaScript!") {
         this.message = message;
@@ -121,7 +137,7 @@ class HelloWorld {
 const app = new HelloWorld();
 app.greet();
 `,
-    'Python': `#!/usr/bin/env python3
+    Python: `#!/usr/bin/env python3
 # Python Project Template
 
 class HelloWorld:
@@ -135,7 +151,7 @@ if __name__ == "__main__":
     app = HelloWorld()
     app.greet()
 `,
-    'Go': `// Go Project Template
+    Go: `// Go Project Template
 package main
 
 import "fmt"
@@ -160,7 +176,7 @@ func main() {
     app.Greet()
 }
 `,
-    'Rust': `// Rust Project Template
+    Rust: `// Rust Project Template
 struct HelloWorld {
     message: String,
 }
@@ -180,7 +196,7 @@ fn main() {
     let app = HelloWorld::new(None);
     app.greet();
 }
-`
+`,
 };
 
 // GitHub Integration Types

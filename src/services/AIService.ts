@@ -49,14 +49,14 @@ export class AIService {
         const openaiKey = this.config.getApiKey('openai');
         if (openaiKey) {
             this.openaiClient = new OpenAI({
-                apiKey: openaiKey
+                apiKey: openaiKey,
             });
         }
     }
 
     public updateApiKey(provider: 'gemini' | 'openai', apiKey: string): void {
         this.config.updateApiKey(provider, apiKey);
-        
+
         if (provider === 'gemini') {
             this.geminiClient = apiKey ? new GoogleGenerativeAI(apiKey) : null;
         } else if (provider === 'openai') {
@@ -74,14 +74,14 @@ export class AIService {
                 return {
                     content: '',
                     success: false,
-                    error: 'Unsupported AI provider'
+                    error: 'Unsupported AI provider',
                 };
             }
         } catch (error) {
             return {
                 content: '',
                 success: false,
-                error: error instanceof Error ? error.message : 'Unknown error occurred'
+                error: error instanceof Error ? error.message : 'Unknown error occurred',
             };
         }
     }
@@ -91,13 +91,13 @@ export class AIService {
             return {
                 content: '',
                 success: false,
-                error: 'Gemini API key not configured'
+                error: 'Gemini API key not configured',
             };
         }
 
         try {
             const model = this.geminiClient.getGenerativeModel({ model: request.model });
-            
+
             let fullPrompt = request.prompt;
             if (request.systemPrompt) {
                 fullPrompt = `${request.systemPrompt}\n\n${request.prompt}`;
@@ -113,14 +113,14 @@ export class AIService {
                 usage: {
                     promptTokens: 0, // Gemini API doesn't provide detailed token counts
                     completionTokens: 0,
-                    totalTokens: 0
-                }
+                    totalTokens: 0,
+                },
             };
         } catch (error) {
             return {
                 content: '',
                 success: false,
-                error: error instanceof Error ? error.message : 'Gemini API error'
+                error: error instanceof Error ? error.message : 'Gemini API error',
             };
         }
     }
@@ -130,30 +130,30 @@ export class AIService {
             return {
                 content: '',
                 success: false,
-                error: 'OpenAI API key not configured'
+                error: 'OpenAI API key not configured',
             };
         }
 
         try {
             const messages: any[] = [];
-            
+
             if (request.systemPrompt) {
                 messages.push({
                     role: 'system',
-                    content: request.systemPrompt
+                    content: request.systemPrompt,
                 });
             }
-            
+
             messages.push({
                 role: 'user',
-                content: request.prompt
+                content: request.prompt,
             });
 
             const completion = await this.openaiClient.chat.completions.create({
                 model: request.model,
                 messages: messages,
                 temperature: 0.7,
-                max_tokens: 4000
+                max_tokens: 4000,
             });
 
             const content = completion.choices[0]?.message?.content || '';
@@ -164,21 +164,28 @@ export class AIService {
                 usage: {
                     promptTokens: completion.usage?.prompt_tokens,
                     completionTokens: completion.usage?.completion_tokens,
-                    totalTokens: completion.usage?.total_tokens
-                }
+                    totalTokens: completion.usage?.total_tokens,
+                },
             };
         } catch (error) {
             return {
                 content: '',
                 success: false,
-                error: error instanceof Error ? error.message : 'OpenAI API error'
+                error: error instanceof Error ? error.message : 'OpenAI API error',
             };
         }
     }
 
-    public async generateCodeTemplate(language: string, projectName: string, description?: string, preferredProvider?: 'gemini' | 'openai', preferredModel?: string): Promise<AIResponse> {
-        const systemPrompt = `You are a helpful coding assistant. Generate a clean, well-structured code template for the specified programming language. Include comments and best practices. The code should be production-ready and follow language conventions.`;
-        
+    public async generateCodeTemplate(
+        language: string,
+        projectName: string,
+        description?: string,
+        preferredProvider?: 'gemini' | 'openai',
+        preferredModel?: string
+    ): Promise<AIResponse> {
+        const systemPrompt =
+            'You are a helpful coding assistant. Generate a clean, well-structured code template for the specified programming language. Include comments and best practices. The code should be production-ready and follow language conventions.';
+
         const prompt = `Create a ${language} project template for "${projectName}".
 ${description ? `Project description: ${description}` : ''}
 
@@ -197,9 +204,11 @@ Please generate only the code without additional explanations.`;
 
         if (preferredProvider && this.isConfigured(preferredProvider)) {
             provider = preferredProvider;
-            model = preferredModel || (provider === 'gemini' 
-                ? this.config.get('defaultGeminiModel') 
-                : this.config.get('defaultOpenaiModel'));
+            model =
+                preferredModel ||
+                (provider === 'gemini'
+                    ? this.config.get('defaultGeminiModel')
+                    : this.config.get('defaultOpenaiModel'));
         } else {
             // Fallback logic: prefer Gemini if configured, otherwise OpenAI
             if (this.config.hasValidGeminiKey()) {
@@ -212,7 +221,7 @@ Please generate only the code without additional explanations.`;
                 return {
                     content: '',
                     success: false,
-                    error: 'No AI provider is configured. Please configure at least one API key in settings.'
+                    error: 'No AI provider is configured. Please configure at least one API key in settings.',
                 };
             }
         }
@@ -221,20 +230,20 @@ Please generate only the code without additional explanations.`;
             prompt,
             systemPrompt,
             provider,
-            model
+            model,
         });
     }
 
     public isConfigured(provider: 'gemini' | 'openai'): boolean {
-        return provider === 'gemini' 
+        return provider === 'gemini'
             ? this.config.hasValidGeminiKey()
             : this.config.hasValidOpenaiKey();
     }
 
-    public getAvailableProviders(): Array<{ name: 'gemini' | 'openai', configured: boolean }> {
+    public getAvailableProviders(): Array<{ name: 'gemini' | 'openai'; configured: boolean }> {
         return [
             { name: 'gemini', configured: this.isConfigured('gemini') },
-            { name: 'openai', configured: this.isConfigured('openai') }
+            { name: 'openai', configured: this.isConfigured('openai') },
         ];
     }
 }

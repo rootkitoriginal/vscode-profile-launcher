@@ -114,11 +114,12 @@ export class ProfileController {
         try {
             const allProfiles = this.dbService.getAllProfiles();
             const lowerQuery = query.toLowerCase();
-            
-            return allProfiles.filter(profile => 
-                profile.name.toLowerCase().includes(lowerQuery) ||
-                profile.language.toLowerCase().includes(lowerQuery) ||
-                (profile.description && profile.description.toLowerCase().includes(lowerQuery))
+
+            return allProfiles.filter(
+                profile =>
+                    profile.name.toLowerCase().includes(lowerQuery) ||
+                    profile.language.toLowerCase().includes(lowerQuery) ||
+                    (profile.description && profile.description.toLowerCase().includes(lowerQuery))
             );
         } catch (error) {
             console.error('Error searching profiles:', error);
@@ -132,13 +133,13 @@ export class ProfileController {
     async filterByLanguage(language: string): Promise<Profile[]> {
         try {
             const allProfiles = this.dbService.getAllProfiles();
-            
+
             if (!language || language === 'all') {
                 return allProfiles;
             }
-            
-            return allProfiles.filter(profile => 
-                profile.language.toLowerCase() === language.toLowerCase()
+
+            return allProfiles.filter(
+                profile => profile.language.toLowerCase() === language.toLowerCase()
             );
         } catch (error) {
             console.error('Error filtering profiles:', error);

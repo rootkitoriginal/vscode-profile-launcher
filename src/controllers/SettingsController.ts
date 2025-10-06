@@ -16,13 +16,13 @@ export class SettingsController {
     /**
      * Get all configuration settings
      */
-    async getConfig(): Promise<Record<string, any>> {
+    async getConfig(): Promise<Record<string, string | boolean | number>> {
         try {
             const config = this.configService.getAll();
             return {
                 ...config,
                 hasGeminiKey: this.configService.hasValidGeminiKey(),
-                hasOpenaiKey: this.configService.hasValidOpenaiKey()
+                hasOpenaiKey: this.configService.hasValidOpenaiKey(),
             };
         } catch (error) {
             console.error('Error fetching config:', error);
@@ -37,7 +37,7 @@ export class SettingsController {
         try {
             return {
                 geminiApiKey: this.configService.getApiKey('gemini'),
-                openaiApiKey: this.configService.getApiKey('openai')
+                openaiApiKey: this.configService.getApiKey('openai'),
             };
         } catch (error) {
             console.error('Error fetching API keys:', error);
@@ -95,7 +95,11 @@ export class SettingsController {
     /**
      * Get profile paths for a given profile name
      */
-    getProfilePaths(profileName: string): { baseDir: string; dataDir: string; extensionsDir: string } {
+    getProfilePaths(profileName: string): {
+        baseDir: string;
+        dataDir: string;
+        extensionsDir: string;
+    } {
         const profileSlug = this.configService.createProfileSlug(profileName);
         return this.configService.getProfilePath(profileSlug);
     }

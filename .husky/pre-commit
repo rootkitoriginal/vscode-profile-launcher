@@ -1,0 +1,5 @@
+# Run lint-staged for formatting and linting
+npx lint-staged
+
+# Run tests
+npm run test:unit

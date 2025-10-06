@@ -28,11 +28,11 @@ export class GitHubModal {
         }
 
         this.currentProfile = profile;
-        
+
         if (this.modal) {
             this.modal.style.display = 'block';
         }
-        
+
         await this.loadBranches();
         await this.loadIssues();
     }
@@ -63,35 +63,36 @@ export class GitHubModal {
      */
     async loadBranches() {
         if (!this.currentProfile?.githubRepo) return;
-        
+
         try {
             const { owner, repo } = this.currentProfile.githubRepo;
             this.branches = await window.electronAPI.githubListBranches(owner, repo);
-            
+
             const branchSelect = document.getElementById('branchSelect');
             if (!branchSelect) return;
-            
+
             branchSelect.innerHTML = '';
-            
+
             this.branches.forEach(branch => {
                 const option = document.createElement('option');
                 option.value = branch;
                 option.textContent = branch;
-                
-                if (branch === this.currentProfile.githubRepo.branch || 
-                    branch === 'main' || 
-                    branch === 'master') {
+
+                if (
+                    branch === this.currentProfile.githubRepo.branch ||
+                    branch === 'main' ||
+                    branch === 'master'
+                ) {
                     option.selected = true;
                     this.selectedBranch = branch;
                 }
-                
+
                 branchSelect.appendChild(option);
             });
-            
-            branchSelect.addEventListener('change', (e) => {
+
+            branchSelect.addEventListener('change', e => {
                 this.selectedBranch = e.target.value;
             });
-            
         } catch (error) {
             console.error('Failed to load branches:', error);
             showError('Failed to load branches: ' + error.message);
@@ -104,13 +105,12 @@ export class GitHubModal {
      */
     async loadIssues(state = 'open') {
         if (!this.currentProfile?.githubRepo) return;
-        
+
         try {
             const { owner, repo } = this.currentProfile.githubRepo;
             this.issues = await window.electronAPI.githubListIssues(owner, repo, state);
-            
+
             this.renderIssues();
-            
         } catch (error) {
             console.error('Failed to load issues:', error);
             showError('Failed to load issues: ' + error.message);
@@ -123,19 +123,19 @@ export class GitHubModal {
     renderIssues() {
         const issuesList = document.getElementById('issuesList');
         if (!issuesList) return;
-        
+
         if (this.issues.length === 0) {
             issuesList.innerHTML = '<div class="empty-state">No issues found</div>';
             return;
         }
-        
+
         issuesList.innerHTML = '';
-        
+
         this.issues.forEach(issue => {
             const issueElement = document.createElement('div');
             issueElement.className = 'issue-item';
             issueElement.dataset.issueId = issue.id;
-            
+
             issueElement.innerHTML = `
                 <div class="issue-header">
                     <h4 class="issue-title">${escapeHtml(issue.title)}</h4>
@@ -150,16 +150,16 @@ export class GitHubModal {
                     <span>Updated: ${formatDate(issue.updatedAt)}</span>
                 </div>
             `;
-            
+
             issueElement.addEventListener('click', () => {
                 document.querySelectorAll('.issue-item').forEach(item => {
                     item.classList.remove('selected');
                 });
-                
+
                 issueElement.classList.add('selected');
                 this.selectedIssue = issue;
             });
-            
+
             issuesList.appendChild(issueElement);
         });
     }
@@ -177,19 +177,19 @@ export class GitHubModal {
         if (filterBtn) {
             filterBtn.classList.add('active');
         }
-        
+
         let filteredIssues = this.issues;
-        
+
         if (filter === 'Todo') {
-            filteredIssues = this.issues.filter(issue => 
-                issue.labels.includes('todo') || issue.labels.includes('enhancement')
+            filteredIssues = this.issues.filter(
+                issue => issue.labels.includes('todo') || issue.labels.includes('enhancement')
             );
         } else if (filter === 'InProgress') {
-            filteredIssues = this.issues.filter(issue => 
-                issue.labels.includes('in-progress') || issue.labels.includes('bug')
+            filteredIssues = this.issues.filter(
+                issue => issue.labels.includes('in-progress') || issue.labels.includes('bug')
             );
         }
-        
+
         // Temporarily update issues for rendering
         const originalIssues = this.issues;
         this.issues = filteredIssues;
@@ -213,7 +213,7 @@ export class GitHubModal {
         if (this.newIssueModal) {
             this.newIssueModal.style.display = 'none';
         }
-        
+
         const form = document.getElementById('newIssueForm');
         if (form) {
             form.reset();
@@ -228,17 +228,16 @@ export class GitHubModal {
      */
     async createIssue(title, body, labels = []) {
         if (!this.currentProfile?.githubRepo) return;
-        
+
         try {
             showLoading();
             const { owner, repo } = this.currentProfile.githubRepo;
-            
+
             await window.electronAPI.githubCreateIssue(owner, repo, title, body, labels);
-            
+
             showSuccess('Issue created successfully!');
             this.hideNewIssueModal();
             await this.loadIssues();
-            
         } catch (error) {
             console.error('Failed to create issue:', error);
             showError('Failed to create issue: ' + error.message);
@@ -252,20 +251,19 @@ export class GitHubModal {
      */
     async openVSCodeWithBranch() {
         if (!this.currentProfile) return;
-        
+
         try {
             showLoading();
-            
+
             // Note: Branch checkout is handled by the main process
             // This is just launching VS Code
             await window.electronAPI.launchVSCode(this.currentProfile);
-            
+
             if (this.selectedBranch) {
                 showSuccess(`Opening VS Code with branch: ${this.selectedBranch}`);
             }
-            
+
             this.hide();
-            
         } catch (error) {
             console.error('Failed to open VS Code:', error);
             showError('Failed to open VS Code: ' + error.message);

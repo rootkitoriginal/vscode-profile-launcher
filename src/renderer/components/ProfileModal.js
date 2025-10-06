@@ -24,11 +24,11 @@ export class ProfileModal {
         this.modalTitle.textContent = 'Create New Profile';
         this.form.reset();
         document.getElementById('saveBtn').textContent = 'Save Profile';
-        
+
         this.clearEnvVariables();
         this.clearGitHubSelections();
         this.populateAIProviders();
-        
+
         this.show();
         document.getElementById('profileName').focus();
     }
@@ -43,7 +43,7 @@ export class ProfileModal {
         this.isEditMode = true;
         this.currentProfile = profile;
         this.modalTitle.textContent = 'Edit Profile';
-        
+
         // Populate form fields
         document.getElementById('profileName').value = profile.name;
         document.getElementById('profileLanguage').value = profile.language;
@@ -51,10 +51,10 @@ export class ProfileModal {
         document.getElementById('workspacePath').value = profile.workspacePath || '';
         document.getElementById('aiProvider').value = profile.aiProvider || '';
         document.getElementById('aiModel').value = profile.aiModel || '';
-        
+
         // Populate GitHub data
         document.getElementById('githubOwner').value = profile.githubRepo?.owner || '';
-        
+
         if (profile.githubRepo?.owner && onOwnerChange) {
             onOwnerChange({ target: { value: profile.githubRepo.owner } });
             setTimeout(() => {
@@ -66,7 +66,7 @@ export class ProfileModal {
         } else {
             this.clearGitHubSelections();
         }
-        
+
         // Populate environment variables
         this.clearEnvVariables();
         if (profile.envVariables) {
@@ -74,13 +74,13 @@ export class ProfileModal {
                 this.addEnvVariable(key, value);
             });
         }
-        
+
         // Populate AI providers
         this.populateAIProviders();
         if (profile.aiProvider) {
             this.updateAIModels(profile.aiProvider);
         }
-        
+
         document.getElementById('saveBtn').textContent = 'Update Profile';
         this.show();
         document.getElementById('profileName').focus();
@@ -120,11 +120,11 @@ export class ProfileModal {
     populateAIProviders() {
         const aiProviderSelect = document.getElementById('aiProvider');
         if (!aiProviderSelect) return;
-        
+
         while (aiProviderSelect.children.length > 1) {
             aiProviderSelect.removeChild(aiProviderSelect.lastChild);
         }
-        
+
         this.aiProviders.forEach(provider => {
             const option = document.createElement('option');
             option.value = provider.name;
@@ -140,11 +140,11 @@ export class ProfileModal {
     updateAIModels(providerName) {
         const aiModelSelect = document.getElementById('aiModel');
         if (!aiModelSelect) return;
-        
+
         aiModelSelect.innerHTML = '<option value="">Select model...</option>';
-        
+
         if (!providerName) return;
-        
+
         const provider = this.aiProviders.find(p => p.name === providerName);
         if (provider) {
             provider.models.forEach(model => {
@@ -164,9 +164,9 @@ export class ProfileModal {
     addEnvVariable(key = '', value = '') {
         const container = document.getElementById('envVariables');
         if (!container) return;
-        
+
         const addButton = container.querySelector('.env-var-row');
-        
+
         const row = document.createElement('div');
         row.className = 'env-var-row';
         row.innerHTML = `
@@ -174,11 +174,11 @@ export class ProfileModal {
             <input type="text" class="form-input env-var-input" placeholder="Variable value" value="${escapeHtml(value)}">
             <button type="button" class="env-var-remove">×</button>
         `;
-        
+
         // Add remove handler
         const removeBtn = row.querySelector('.env-var-remove');
         removeBtn.addEventListener('click', () => row.remove());
-        
+
         container.insertBefore(row, addButton);
     }
 
@@ -188,7 +188,7 @@ export class ProfileModal {
     clearEnvVariables() {
         const container = document.getElementById('envVariables');
         if (!container) return;
-        
+
         const rows = container.querySelectorAll('.env-var-row');
         rows.forEach((row, index) => {
             if (index < rows.length - 1) {
@@ -204,22 +204,22 @@ export class ProfileModal {
     getEnvVariablesFromForm() {
         const container = document.getElementById('envVariables');
         if (!container) return {};
-        
+
         const rows = container.querySelectorAll('.env-var-row');
         const envVars = {};
-        
+
         rows.forEach((row, index) => {
             if (index < rows.length - 1) {
                 const inputs = row.querySelectorAll('input');
                 const key = inputs[0].value.trim();
                 const value = inputs[1].value.trim();
-                
+
                 if (key) {
                     envVars[key] = value;
                 }
             }
         });
-        
+
         return envVars;
     }
 
@@ -229,7 +229,7 @@ export class ProfileModal {
     clearGitHubSelections() {
         const repoSelect = document.getElementById('githubRepo');
         const branchSelect = document.getElementById('githubBranch');
-        
+
         if (repoSelect) {
             repoSelect.innerHTML = '<option value="">Select repository...</option>';
         }

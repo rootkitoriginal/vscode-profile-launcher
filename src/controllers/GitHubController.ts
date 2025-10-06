@@ -1,26 +1,31 @@
-import { GitHubIssue, IssueState } from '../types';
+import { GitHubIssue } from '../types';
+import { GitHubService } from '../services/GitHubService';
 
 /**
  * GitHubController handles GitHub integration operations
  */
 export class GitHubController {
-    private githubService: any;
+    private githubService: GitHubService | null;
 
-    constructor(githubService: any) {
+    constructor(githubService: GitHubService | null) {
         this.githubService = githubService;
     }
 
     /**
      * Update GitHub service instance (for lazy loading)
      */
-    updateService(githubService: any): void {
+    updateService(githubService: GitHubService): void {
         this.githubService = githubService;
     }
 
     /**
      * List issues for a repository
      */
-    async listIssues(owner: string, repo: string, state?: 'open' | 'closed'): Promise<GitHubIssue[]> {
+    async listIssues(
+        owner: string,
+        repo: string,
+        state?: 'open' | 'closed'
+    ): Promise<GitHubIssue[]> {
         try {
             if (!this.githubService) {
                 throw new Error('GitHub service not initialized');
@@ -87,7 +92,11 @@ export class GitHubController {
      * List repositories for a given owner
      * @param owner The owner (user or organization) whose repositories to list
      */
-    async listRepositories(owner: string): Promise<any[]> {
+    async listRepositories(
+        owner: string
+    ): Promise<
+        Array<{ name: string; fullName: string; description: string; defaultBranch: string }>
+    > {
         try {
             if (!this.githubService) {
                 throw new Error('GitHub service not initialized');

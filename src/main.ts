@@ -9,15 +9,16 @@ import { ProfileController } from './controllers/ProfileController';
 import { SettingsController } from './controllers/SettingsController';
 import { AIController } from './controllers/AIController';
 import { GitHubController } from './controllers/GitHubController';
-import { Profile, AI_PROVIDERS } from './types';
+import { GitHubService } from './services/GitHubService';
+import { Profile, CreateProfileData, UpdateProfileData } from './types';
 
 class App {
     private mainWindow: BrowserWindow | null = null;
     private db: DatabaseService;
     private config: ConfigService;
     private aiManager: AIService;
-    private githubManager: any = null;
-    
+    private githubManager: GitHubService | null = null;
+
     // Controllers
     private profileController: ProfileController;
     private settingsController: SettingsController;
@@ -28,20 +29,20 @@ class App {
         this.config = ConfigService.getInstance();
         this.db = new DatabaseService();
         this.aiManager = AIService.getInstance();
-        
+
         // Initialize controllers
         this.profileController = new ProfileController(this.db);
         this.settingsController = new SettingsController(this.config, this.aiManager);
         this.aiController = new AIController(this.aiManager);
         this.githubController = new GitHubController(null);
-        
+
         this.initialize();
     }
 
     private async initialize(): Promise<void> {
         // Load saved API keys
         await this.config.loadApiKeys();
-        
+
         this.setupElectronEvents();
         this.setupIpcHandlers();
     }
@@ -49,7 +50,7 @@ class App {
     private setupElectronEvents(): void {
         app.whenReady().then(() => {
             this.createWindow();
-            
+
             app.on('activate', () => {
                 if (BrowserWindow.getAllWindows().length === 0) {
                     this.createWindow();
@@ -73,10 +74,10 @@ class App {
             webPreferences: {
                 nodeIntegration: false,
                 contextIsolation: true,
-                preload: path.join(__dirname, 'preload.js')
+                preload: path.join(__dirname, 'preload.js'),
             },
             titleBarStyle: 'default',
-            show: false
+            show: false,
         });
 
         this.mainWindow.loadFile(path.join(__dirname, '../src/renderer/index.html'));
@@ -102,13 +103,19 @@ class App {
             return this.profileController.getAllProfiles();
         });
 
-        ipcMain.handle('create-profile', async (_: IpcMainInvokeEvent, profileData: any) => {
-            return this.profileController.createProfile(profileData);
-        });
+        ipcMain.handle(
+            'create-profile',
+            async (_: IpcMainInvokeEvent, profileData: CreateProfileData) => {
+                return this.profileController.createProfile(profileData);
+            }
+        );
 
-        ipcMain.handle('update-profile', async (_: IpcMainInvokeEvent, id: number, profileData: any) => {
-            return this.profileController.updateProfile(id, profileData);
-        });
+        ipcMain.handle(
+            'update-profile',
+            async (_: IpcMainInvokeEvent, id: number, profileData: UpdateProfileData) => {
+                return this.profileController.updateProfile(id, profileData);
+            }
+        );
 
         ipcMain.handle('delete-profile', async (_: IpcMainInvokeEvent, id: number) => {
             return this.profileController.deleteProfile(id);
@@ -141,13 +148,32 @@ class App {
             return this.settingsController.getApiKeys();
         });
 
-        ipcMain.handle('update-api-key', async (_: IpcMainInvokeEvent, provider: 'gemini' | 'openai', apiKey: string) => {
-            return this.settingsController.updateApiKey(provider, apiKey);
-        });
+        ipcMain.handle(
+            'update-api-key',
+            async (_: IpcMainInvokeEvent, provider: 'gemini' | 'openai', apiKey: string) => {
+                return this.settingsController.updateApiKey(provider, apiKey);
+            }
+        );
 
-        ipcMain.handle('generate-code-template', async (_: IpcMainInvokeEvent, language: string, projectName: string, description?: string, preferredProvider?: 'gemini' | 'openai', preferredModel?: string) => {
-            return this.aiController.generateCodeTemplate(language, projectName, description, preferredProvider, preferredModel);
-        });
+        ipcMain.handle(
+            'generate-code-template',
+            async (
+                _: IpcMainInvokeEvent,
+                language: string,
+                projectName: string,
+                description?: string,
+                preferredProvider?: 'gemini' | 'openai',
+                preferredModel?: string
+            ) => {
+                return this.aiController.generateCodeTemplate(
+                    language,
+                    projectName,
+                    description,
+                    preferredProvider,
+                    preferredModel
+                );
+            }
+        );
 
         ipcMain.handle('generate-code', async (_: IpcMainInvokeEvent, request: any) => {
             return this.aiController.generateCode(request);
@@ -176,25 +202,49 @@ class App {
             return this.settingsController.getGitHubToken();
         });
 
-        ipcMain.handle('github-list-issues', async (_: IpcMainInvokeEvent, owner: string, repo: string, state?: 'open' | 'closed') => {
-            await this.initGitHubManager();
-            return this.githubController.listIssues(owner, repo, state);
-        });
+        ipcMain.handle(
+            'github-list-issues',
+            async (
+                _: IpcMainInvokeEvent,
+                owner: string,
+                repo: string,
+                state?: 'open' | 'closed'
+            ) => {
+                await this.initGitHubManager();
+                return this.githubController.listIssues(owner, repo, state);
+            }
+        );
 
-        ipcMain.handle('github-create-issue', async (_: IpcMainInvokeEvent, owner: string, repo: string, title: string, body: string, labels?: string[]) => {
-            await this.initGitHubManager();
-            return this.githubController.createIssue(owner, repo, title, body, labels);
-        });
+        ipcMain.handle(
+            'github-create-issue',
+            async (
+                _: IpcMainInvokeEvent,
+                owner: string,
+                repo: string,
+                title: string,
+                body: string,
+                labels?: string[]
+            ) => {
+                await this.initGitHubManager();
+                return this.githubController.createIssue(owner, repo, title, body, labels);
+            }
+        );
 
-        ipcMain.handle('github-list-branches', async (_: IpcMainInvokeEvent, owner: string, repo: string) => {
-            await this.initGitHubManager();
-            return this.githubController.listBranches(owner, repo);
-        });
+        ipcMain.handle(
+            'github-list-branches',
+            async (_: IpcMainInvokeEvent, owner: string, repo: string) => {
+                await this.initGitHubManager();
+                return this.githubController.listBranches(owner, repo);
+            }
+        );
 
-        ipcMain.handle('github-validate-repo', async (_: IpcMainInvokeEvent, owner: string, repo: string) => {
-            await this.initGitHubManager();
-            return this.githubController.validateRepository(owner, repo);
-        });
+        ipcMain.handle(
+            'github-validate-repo',
+            async (_: IpcMainInvokeEvent, owner: string, repo: string) => {
+                await this.initGitHubManager();
+                return this.githubController.validateRepository(owner, repo);
+            }
+        );
 
         ipcMain.handle('is-github-configured', async () => {
             await this.initGitHubManager();
@@ -204,7 +254,7 @@ class App {
         // Directory picker handler
         ipcMain.handle('select-directory', async () => {
             const result = await dialog.showOpenDialog({
-                properties: ['openDirectory']
+                properties: ['openDirectory'],
             });
             return result.canceled ? null : result.filePaths[0];
         });
@@ -238,9 +288,11 @@ class App {
             await this.ensureProfileDirectories(profilePaths);
 
             const args = [
-                '--user-data-dir', profilePaths.dataDir,
-                '--extensions-dir', profilePaths.extensionsDir,
-                '--new-window'
+                '--user-data-dir',
+                profilePaths.dataDir,
+                '--extensions-dir',
+                profilePaths.extensionsDir,
+                '--new-window',
             ];
 
             // Add workspace path if provided, otherwise just open VS Code
@@ -252,14 +304,14 @@ class App {
             const vscodeCommand = this.config.get('vscodeCommand') || 'code';
             const vscode = spawn(vscodeCommand, args, {
                 detached: true,
-                stdio: 'ignore'
+                stdio: 'ignore',
             });
 
             vscode.unref();
-            
+
             // Update last used timestamp
             await this.profileController.updateLastUsed(profile.id!);
-            
+
             return true;
         } catch (error) {
             console.error('Failed to launch VS Code:', error);
@@ -267,7 +319,11 @@ class App {
         }
     }
 
-    private async ensureProfileDirectories(profilePaths: { baseDir: string; dataDir: string; extensionsDir: string }): Promise<void> {
+    private async ensureProfileDirectories(profilePaths: {
+        baseDir: string;
+        dataDir: string;
+        extensionsDir: string;
+    }): Promise<void> {
         try {
             await fs.promises.mkdir(profilePaths.baseDir, { recursive: true });
             await fs.promises.mkdir(profilePaths.dataDir, { recursive: true });

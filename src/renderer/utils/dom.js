@@ -36,13 +36,13 @@ export function showError(message) {
             <span class="notification-message">${message}</span>
         </div>
     `;
-    
+
     document.body.appendChild(errorDiv);
-    
+
     setTimeout(() => {
         errorDiv.classList.add('show');
     }, 10);
-    
+
     setTimeout(() => {
         errorDiv.classList.remove('show');
         setTimeout(() => {
@@ -64,13 +64,13 @@ export function showSuccess(message) {
             <span class="notification-message">${message}</span>
         </div>
     `;
-    
+
     document.body.appendChild(successDiv);
-    
+
     setTimeout(() => {
         successDiv.classList.add('show');
     }, 10);
-    
+
     setTimeout(() => {
         successDiv.classList.remove('show');
         setTimeout(() => {
