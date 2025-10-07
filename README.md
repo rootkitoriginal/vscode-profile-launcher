@@ -30,6 +30,27 @@ Um launcher inteligente de profiles do VS Code construído com Electron, TypeScr
 - **Caminhos de Workspace**: Defina diretórios de trabalho padrão
 - **Gerenciamento de Chaves API**: Interface segura para configurar credenciais
 
+### 🪟 GitHub Repository Manager (NEW)
+
+Uma janela dedicada do Electron para gerenciar repositórios GitHub com interface inspirada no GitHub:
+
+- **Janela Separada**: Experiência desktop nativa independente da janela principal
+- **Interface GitHub-Inspired**: Design com tema dark idêntico ao GitHub
+- **Persistência de Estado**: Posição, tamanho e estado da janela são salvos
+- **Visualização Completa**:
+    - Overview com estatísticas e atividade recente
+    - Issues (filtrar por open/closed/all)
+    - Pull Requests (filtrar por open/closed/all)
+    - Commits (histórico paginado)
+    - Branches (com status de proteção)
+    - Gráfico de distribuição de linguagens
+- **Integração com IA**: Abra issues/PRs diretamente com AI Assistant
+- **Quick Actions**: Sync, Open in VSCode, AI Chat
+- **Multi-Window**: Gerenciamento robusto de múltiplas janelas
+- **Segurança**: Context isolation e Content Security Policy
+
+Para mais detalhes, veja [GitHub Window Documentation](src/renderer/github-window/README.md)
+
 ## 🛠️ Tecnologias Utilizadas
 
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+)
