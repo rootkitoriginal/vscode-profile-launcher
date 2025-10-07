@@ -8,9 +8,9 @@ import { ProfileCard } from './components/ProfileCard.js';
 import { ProfileModal } from './components/ProfileModal.js';
 import { SettingsModal } from './components/SettingsModal.js';
 import { GitHubModal } from './components/GitHubModal.js';
+import { GitHubIntegration } from './components/GitHubIntegration.js';
 import { MonacoEditor } from './components/MonacoEditor.js';
 import { showLoading, hideLoading, showSuccess, showError } from './utils/dom.js';
-import { escapeHtml, formatDate } from './utils/formatters.js';
 
 // Application state
 let profiles = [];
@@ -21,6 +21,7 @@ let appConfig = {};
 let profileModal = null;
 let settingsModal = null;
 let githubModal = null;
+let githubIntegration = null;
 let monacoEditor = null;
 
 // DOM elements
@@ -44,10 +45,14 @@ async function initializeComponents() {
     profileModal = new ProfileModal();
     settingsModal = new SettingsModal();
     githubModal = new GitHubModal();
+    githubIntegration = new GitHubIntegration();
     monacoEditor = new MonacoEditor();
 
     // Initialize Monaco Editor library
     await MonacoEditor.initialize();
+
+    // Initialize GitHub integration
+    await githubIntegration.initialize();
 }
 
 /**
@@ -126,6 +131,20 @@ function setupEventListeners() {
         // Reload AI providers after settings change
         aiProviders = await window.electronAPI.getAIProviders();
         profileModal.setAIProviders(aiProviders);
+    });
+
+    // GitHub token validation button
+    document.getElementById('validateGitHubTokenBtn')?.addEventListener('click', async () => {
+        const token = document.getElementById('githubToken').value.trim();
+        if (token) {
+            await githubIntegration.validateToken(token);
+        } else {
+            const statusDiv = document.getElementById('githubStatus');
+            if (statusDiv) {
+                statusDiv.innerHTML =
+                    '<span style="color: #e74c3c;">✗ Please enter a token first</span>';
+            }
+        }
     });
 
     // Settings tabs
@@ -452,6 +471,7 @@ window.app = {
     profileModal,
     settingsModal,
     githubModal,
+    githubIntegration,
     monacoEditor,
     profiles,
     reload: async () => {

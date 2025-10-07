@@ -1141,3 +1141,52 @@ a:hover {
 .notification.info {
     border-left: 4px solid var(--accent-color);
 }
+
+/* GitHub Integration Status */
+.github-status {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    background-color: var(--bg-tertiary);
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+.github-status:empty {
+    display: none;
+}
+
+/* Description Hint */
+#descriptionHint {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* Button variations */
+.btn.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Form input with button */
+.input-with-button {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.input-with-button .form-input {
+    flex: 1;
+}
+
+.input-with-button .btn {
+    flex-shrink: 0;
+}
