@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Integration</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="github-window">
+        <div class="github-window-header">
+            <h2>GitHub Integration</h2>
+            <button id="closeWindowBtn" class="btn btn-secondary">Close</button>
+        </div>
+
+        <div class="github-window-content">
+            <!-- GitHub Controls -->
+            <div class="github-controls">
+                <div class="filter-controls">
+                    <button class="btn active" data-filter="open">Open</button>
+                    <button class="btn" data-filter="closed">Closed</button>
+                    <button class="btn" data-filter="all">All</button>
+                </div>
+                <div class="action-controls">
+                    <button id="refreshBtn" class="btn btn-secondary">🔄 Refresh</button>
+                    <button id="newIssueBtn" class="btn btn-primary">+ New Issue</button>
+                </div>
+            </div>
+
+            <!-- Branch Selection -->
+            <div class="branch-selection">
+                <label for="branchSelect">Branch:</label>
+                <select id="branchSelect" class="form-select">
+                    <option value="">Select branch...</option>
+                </select>
+            </div>
+
+            <!-- Issues List -->
+            <div class="issues-container">
+                <h3>Issues</h3>
+                <div id="issuesList" class="issues-list">
+                    <!-- Issues will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Issue Details -->
+            <div id="issueDetails" class="issue-details" style="display: none;">
+                <div class="issue-details-header">
+                    <h3 id="issueTitle"></h3>
+                    <button id="closeDetailsBtn" class="btn btn-sm">×</button>
+                </div>
+                <div class="issue-details-body">
+                    <div class="issue-meta">
+                        <span id="issueNumber"></span>
+                        <span id="issueState"></span>
+                        <span id="issueAuthor"></span>
+                        <span id="issueDate"></span>
+                    </div>
+                    <div id="issueBody" class="issue-body"></div>
+                    <div class="issue-actions">
+                        <button id="launchIssueBtn" class="btn btn-primary">Launch with Issue</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Issue Modal -->
+    <div id="newIssueModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Issue</h3>
+                <button id="closeNewIssueModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="issueTitle">Title *</label>
+                    <input type="text" id="issueTitleInput" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="issueBody">Description</label>
+                    <textarea id="issueBodyInput" class="form-textarea" rows="6"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="issueLabels">Labels (comma-separated)</label>
+                    <input type="text" id="issueLabelsInput" class="form-input" 
+                           placeholder="bug, feature, enhancement">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="cancelNewIssueBtn" class="btn btn-secondary">Cancel</button>
+                <button type="button" id="createIssueBtn" class="btn btn-primary">Create Issue</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="github-integration.js"></script>
+</body>
+</html>

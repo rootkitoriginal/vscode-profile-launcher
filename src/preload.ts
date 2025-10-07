@@ -129,6 +129,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ): Promise<
         Array<{ name: string; fullName: string; description: string; defaultBranch: string }>
     > => ipcRenderer.invoke('github-list-repos', owner),
+
+    // GitHub Window
+    openGitHubWindow: (profileId: number): Promise<boolean> =>
+        ipcRenderer.invoke('open-github-window', profileId),
+
+    getGitHubWindowProfile: (): Promise<any> => ipcRenderer.invoke('get-github-window-profile'),
+
+    launchProfileWithIssue: (profileId: number, issueNumber: number): Promise<boolean> =>
+        ipcRenderer.invoke('launch-profile-with-issue', profileId, issueNumber),
 });
 
 // Define the API interface for TypeScript
@@ -212,6 +221,9 @@ declare global {
                     defaultBranch: string;
                 }>
             >;
+            openGitHubWindow: (profileId: number) => Promise<boolean>;
+            getGitHubWindowProfile: () => Promise<any>;
+            launchProfileWithIssue: (profileId: number, issueNumber: number) => Promise<boolean>;
         };
     }
 }

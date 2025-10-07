@@ -243,6 +243,22 @@ body {
     color: var(--text-muted);
 }
 
+.github-btn {
+    font-size: 11px;
+    padding: 4px 8px;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: var(--transition);
+}
+
+.github-btn:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--accent-color);
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
@@ -1140,6 +1156,109 @@ a:hover {
 
 .notification.info {
     border-left: 4px solid var(--accent-color);
+}
+
+/* GitHub Integration Window */
+.github-window {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.github-window-header {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.github-window-header h2 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--text-primary);
+}
+
+.github-window-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.issues-container {
+    margin-top: 20px;
+}
+
+.issues-container h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.error-state, .empty-state {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.issue-details {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 100vh;
+    background-color: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
+    overflow-y: auto;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.issue-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.issue-details-header h3 {
+    margin: 0;
+    font-size: 16px;
+    flex: 1;
+}
+
+.issue-details-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.issue-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.issue-body {
+    padding: 12px;
+    background-color: var(--bg-tertiary);
+    border-radius: var(--radius);
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.issue-actions {
+    margin-top: 16px;
+}
+
+.issue-actions .btn {
+    width: 100%;
 }
 
 /* GitHub Integration Status */

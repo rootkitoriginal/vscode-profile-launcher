@@ -16,6 +16,8 @@ import { Profile, CreateProfileData, UpdateProfileData } from './types';
 
 class App {
     private mainWindow: BrowserWindow | null = null;
+    private githubWindow: BrowserWindow | null = null;
+    private githubWindowProfile: Profile | null = null;
     private db: DatabaseService;
     private config: ConfigService;
     private aiManager: AIService;
@@ -100,6 +102,49 @@ class App {
 
         // Open external links in default browser
         this.mainWindow.webContents.setWindowOpenHandler(({ url }: { url: string }) => {
+            shell.openExternal(url);
+            return { action: 'deny' };
+        });
+    }
+
+    private createGitHubWindow(profile: Profile): void {
+        // Close existing GitHub window if open
+        if (this.githubWindow) {
+            this.githubWindow.close();
+        }
+
+        this.githubWindowProfile = profile;
+
+        this.githubWindow = new BrowserWindow({
+            width: 900,
+            height: 700,
+            minWidth: 700,
+            minHeight: 500,
+            parent: this.mainWindow || undefined,
+            modal: false,
+            webPreferences: {
+                nodeIntegration: false,
+                contextIsolation: true,
+                preload: path.join(__dirname, 'preload.js'),
+            },
+            titleBarStyle: 'default',
+            show: false,
+            title: `GitHub Integration - ${profile.name}`,
+        });
+
+        this.githubWindow.loadFile(path.join(__dirname, '../src/renderer/github-integration.html'));
+
+        this.githubWindow.once('ready-to-show', () => {
+            this.githubWindow?.show();
+        });
+
+        this.githubWindow.on('closed', () => {
+            this.githubWindow = null;
+            this.githubWindowProfile = null;
+        });
+
+        // Open external links in default browser
+        this.githubWindow.webContents.setWindowOpenHandler(({ url }: { url: string }) => {
             shell.openExternal(url);
             return { action: 'deny' };
         });
@@ -311,6 +356,34 @@ class App {
             await this.initGitHubManager();
             return this.githubController.listRepositories(owner);
         });
+
+        // GitHub Window handlers
+        ipcMain.handle('open-github-window', async (_: IpcMainInvokeEvent, profileId: number) => {
+            const profile = await this.profileController.getProfile(profileId);
+            if (profile) {
+                this.createGitHubWindow(profile);
+                return true;
+            }
+            return false;
+        });
+
+        ipcMain.handle('get-github-window-profile', async () => {
+            return this.githubWindowProfile;
+        });
+
+        ipcMain.handle(
+            'launch-profile-with-issue',
+            async (_: IpcMainInvokeEvent, profileId: number, issueNumber: number) => {
+                const profile = await this.profileController.getProfile(profileId);
+                if (profile) {
+                    // Store issue number for the launch
+                    // You can extend this to pass issue info to VS Code
+                    await this.launchVSCode(profile);
+                    return true;
+                }
+                return false;
+            }
+        );
     }
 
     private async initGitHubManager() {

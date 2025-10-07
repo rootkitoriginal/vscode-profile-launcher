@@ -96,6 +96,7 @@ function renderProfiles(profilesToRender = profiles) {
         onLaunch: launchVSCode,
         onContextMenu: showContextMenu,
         onMenuClick: showContextMenu,
+        onGitHubClick: openGitHubWindow,
     });
 }
 
@@ -375,6 +376,23 @@ async function handleProfileSubmit(e) {
         showError(error.message || 'Failed to save profile');
     } finally {
         hideLoading();
+    }
+}
+
+/**
+ * Open GitHub integration window for profile
+ */
+async function openGitHubWindow(profile) {
+    if (!profile.githubRepo || !profile.githubRepo.owner || !profile.githubRepo.repo) {
+        showError('GitHub repository not configured for this profile');
+        return;
+    }
+
+    try {
+        await window.electronAPI.openGitHubWindow(profile.id);
+    } catch (error) {
+        console.error('Error opening GitHub window:', error);
+        showError('Failed to open GitHub integration window');
     }
 }
 
