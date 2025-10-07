@@ -315,6 +315,17 @@ async function handleDeleteProfile() {
  */
 async function handleProfileSubmit(e) {
     e.preventDefault();
+    console.log('📝 Form submit event triggered');
+
+    // Validate form using custom validation
+    const isValid = profileModal.validateForm();
+    console.log('🔍 Form validation result:', isValid);
+    
+    if (!isValid) {
+        console.log('❌ Form validation failed - preventing submission');
+        showError('Please fix the validation errors before saving');
+        return;
+    }
 
     try {
         showLoading();
@@ -325,7 +336,7 @@ async function handleProfileSubmit(e) {
         const name = formData.get('name')?.trim();
         const language = formData.get('language')?.trim();
 
-        console.log('📝 Form data:', { name, language });
+        console.log('📝 Form data collected:', { name, language });
 
         // Validate required fields
         if (!name || name === '') {
@@ -354,6 +365,9 @@ async function handleProfileSubmit(e) {
 
         if (profileModal.inEditMode()) {
             const currentProfile = profileModal.getCurrentProfile();
+            if (!currentProfile || !currentProfile.id) {
+                throw new Error('No profile selected for editing');
+            }
             console.log('✏️ Updating profile:', currentProfile.id);
             await window.electronAPI.updateProfile(currentProfile.id, profileData);
             showSuccess('Profile updated successfully!');
