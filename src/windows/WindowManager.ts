@@ -13,7 +13,11 @@ export class WindowManager {
     /**
      * Cria janela GitHub com estado persistente
      */
-    async createGitHubWindow(parentWindow: BrowserWindow): Promise<BrowserWindow> {
+    async createGitHubWindow(
+        parentWindow: BrowserWindow,
+        owner?: string,
+        repo?: string
+    ): Promise<BrowserWindow> {
         // Carrega estado anterior ou usa defaults
         const state = await this.stateManager.loadState('github-window');
         const defaultState = this.getDefaultGitHubWindowState();
@@ -32,7 +36,7 @@ export class WindowManager {
             parent: undefined,
             modal: false,
             show: false,
-            title: 'GitHub Repository Manager',
+            title: owner && repo ? `GitHub - ${owner}/${repo}` : 'GitHub Repository Manager',
             backgroundColor: '#0d1117',
             webPreferences: {
                 preload: path.join(__dirname, 'preload-github-window.js'),
@@ -43,8 +47,15 @@ export class WindowManager {
             autoHideMenuBar: true,
         });
 
-        // Carrega conteúdo
-        await githubWindow.loadFile(path.join(__dirname, '../renderer/github-window/index.html'));
+        // Carrega conteúdo com query params
+        const htmlPath = path.join(__dirname, '../renderer/github-window/index.html');
+        if (owner && repo) {
+            await githubWindow.loadFile(htmlPath, {
+                query: { owner, repo },
+            });
+        } else {
+            await githubWindow.loadFile(htmlPath);
+        }
 
         // Setup de event listeners
         this.setupWindowEventListeners(githubWindow, 'github-window');

@@ -138,6 +138,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     launchProfileWithIssue: (profileId: number, issueNumber: number): Promise<boolean> =>
         ipcRenderer.invoke('launch-profile-with-issue', profileId, issueNumber),
+
+    // GitHub Repository Manager Window
+    openGitHubRepoWindow: (
+        owner: string,
+        repo: string
+    ): Promise<{ success: boolean; error?: string; focused?: boolean }> =>
+        ipcRenderer.invoke('open-github-repo-window', owner, repo),
 });
 
 // Define the API interface for TypeScript
@@ -192,9 +199,7 @@ declare global {
             githubListBranches: (owner: string, repo: string) => Promise<string[]>;
             githubValidateRepo: (owner: string, repo: string) => Promise<boolean>;
             isGitHubConfigured: () => Promise<boolean>;
-            githubValidateToken: (
-                token: string
-            ) => Promise<{
+            githubValidateToken: (token: string) => Promise<{
                 valid: boolean;
                 user?: { login: string; name: string; avatarUrl: string };
             }>;

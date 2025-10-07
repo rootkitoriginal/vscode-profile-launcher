@@ -320,7 +320,7 @@ async function handleProfileSubmit(e) {
     // Validate form using custom validation
     const isValid = profileModal.validateForm();
     console.log('🔍 Form validation result:', isValid);
-    
+
     if (!isValid) {
         console.log('❌ Form validation failed - preventing submission');
         showError('Please fix the validation errors before saving');
@@ -403,7 +403,15 @@ async function openGitHubWindow(profile) {
     }
 
     try {
-        await window.electronAPI.openGitHubWindow(profile.id);
+        // Open the new GitHub Repository Manager window
+        const result = await window.electronAPI.openGitHubRepoWindow(
+            profile.githubRepo.owner,
+            profile.githubRepo.repo
+        );
+
+        if (!result.success) {
+            showError(`Failed to open GitHub window: ${result.error || 'Unknown error'}`);
+        }
     } catch (error) {
         console.error('Error opening GitHub window:', error);
         showError('Failed to open GitHub integration window');

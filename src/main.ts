@@ -400,7 +400,7 @@ class App {
                         return { success: true, focused: true };
                     }
 
-                    await this.windowManager.createGitHubWindow(this.mainWindow);
+                    await this.windowManager.createGitHubWindow(this.mainWindow, owner, repo);
                     return { success: true };
                 } catch (error: any) {
                     console.error('Failed to open GitHub window:', error);
