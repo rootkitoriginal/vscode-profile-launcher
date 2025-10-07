@@ -418,10 +418,7 @@ async function launchVSCode(profile) {
         showLoading();
         await window.electronAPI.launchVSCode(profile);
 
-        // Update last used timestamp
-        await window.electronAPI.updateLastUsed(profile.id);
-
-        // Reload profiles
+        // Reload profiles to get updated lastUsed timestamp
         profiles = await window.electronAPI.getProfiles();
         renderProfiles();
 
