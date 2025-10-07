@@ -25,6 +25,36 @@ export class GitHubService {
         }
     }
 
+    /**
+     * Verifica o status de autenticação do GitHub
+     * @returns Objeto contendo status de autenticação e informações do usuário
+     */
+    public async getAuthStatus() {
+        if (!this.isConfigured()) {
+            return {
+                isAuthenticated: false,
+                error: 'GitHub token is not configured',
+            };
+        }
+
+        try {
+            // Verifica autenticação obtendo dados do usuário
+            const { data } = await this.octokit.users.getAuthenticated();
+            return {
+                isAuthenticated: true,
+                username: data.login,
+                avatar: data.avatar_url,
+                token: config.getGitHubToken(),
+            };
+        } catch (error) {
+            console.error('Failed to get GitHub authentication status:', error);
+            return {
+                isAuthenticated: false,
+                error: (error as Error).message,
+            };
+        }
+    }
+
     public async updateToken(token: string) {
         if (!this.Octokit) {
             await this.initialize();
@@ -167,14 +197,8 @@ export class GitHubService {
                 repo,
             });
 
-            return {
-                name: response.data.name,
-                fullName: response.data.full_name,
-                description: response.data.description,
-                defaultBranch: response.data.default_branch,
-                cloneUrl: response.data.clone_url,
-                sshUrl: response.data.ssh_url,
-            };
+            // Return full data for GitHub window
+            return response.data;
         } catch (error) {
             console.error('Error fetching repository:', error);
             throw new Error(`Failed to fetch repository: ${error}`);
@@ -330,6 +354,87 @@ export class GitHubService {
         } catch (error) {
             console.error('Error fetching detailed branches:', error);
             throw new Error(`Failed to fetch detailed branches: ${error}`);
+        }
+    }
+
+    public async listPullRequests(
+        owner: string,
+        repo: string,
+        state: 'open' | 'closed' | 'all' = 'open'
+    ): Promise<any[]> {
+        if (!this.octokit) {
+            throw new Error('GitHub service not initialized');
+        }
+
+        try {
+            const { data } = await this.octokit.pulls.list({
+                owner,
+                repo,
+                state,
+                per_page: 30,
+            });
+
+            return data;
+        } catch (error) {
+            console.error('Error fetching pull requests:', error);
+            throw new Error(`Failed to fetch pull requests: ${error}`);
+        }
+    }
+
+    public async listCommits(owner: string, repo: string, page: number = 1): Promise<any[]> {
+        if (!this.octokit) {
+            throw new Error('GitHub service not initialized');
+        }
+
+        try {
+            const { data } = await this.octokit.repos.listCommits({
+                owner,
+                repo,
+                page,
+                per_page: 30,
+            });
+
+            return data;
+        } catch (error) {
+            console.error('Error fetching commits:', error);
+            throw new Error(`Failed to fetch commits: ${error}`);
+        }
+    }
+
+    public async getLanguages(owner: string, repo: string): Promise<Record<string, number>> {
+        if (!this.octokit) {
+            throw new Error('GitHub service not initialized');
+        }
+
+        try {
+            const { data } = await this.octokit.repos.listLanguages({
+                owner,
+                repo,
+            });
+
+            return data;
+        } catch (error) {
+            console.error('Error fetching languages:', error);
+            throw new Error(`Failed to fetch languages: ${error}`);
+        }
+    }
+
+    public async listContributors(owner: string, repo: string): Promise<any[]> {
+        if (!this.octokit) {
+            throw new Error('GitHub service not initialized');
+        }
+
+        try {
+            const { data } = await this.octokit.repos.listContributors({
+                owner,
+                repo,
+                per_page: 30,
+            });
+
+            return data;
+        } catch (error) {
+            console.error('Error fetching contributors:', error);
+            throw new Error(`Failed to fetch contributors: ${error}`);
         }
     }
 }

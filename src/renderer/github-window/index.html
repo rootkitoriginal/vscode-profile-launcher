@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self';">
+    <title>GitHub Repository Manager</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="github-window">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1 class="repo-title">
+                    <span class="repo-icon">📁</span>
+                    <span id="repoFullName">Loading...</span>
+                </h1>
+                <div class="repo-meta">
+                    <span class="visibility" id="visibility"></span>
+                    <button class="btn-icon" id="btnStar" title="Star repository">
+                        <span>⭐</span> Star
+                    </button>
+                    <button class="btn-icon" id="btnWatch" title="Watch repository">
+                        <span>🔔</span> Watch
+                    </button>
+                    <button class="btn-icon" id="btnFork" title="Fork repository">
+                        <span>🍴</span> Fork
+                    </button>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn-icon" id="btnMinimize">_</button>
+                <button class="btn-icon" id="btnMaximize">□</button>
+                <button class="btn-icon btn-close" id="btnClose">×</button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="overview">
+                <span>🏠</span> Overview
+            </button>
+            <button class="tab" data-tab="issues">
+                <span>📋</span> Issues <span class="badge" id="issuesCount">0</span>
+            </button>
+            <button class="tab" data-tab="pullrequests">
+                <span>🔀</span> Pull Requests <span class="badge" id="prsCount">0</span>
+            </button>
+            <button class="tab" data-tab="commits">
+                <span>💾</span> Commits
+            </button>
+            <button class="tab" data-tab="branches">
+                <span>🌿</span> Branches
+            </button>
+            <button class="tab" data-tab="settings">
+                <span>⚙️</span> Settings
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview-tab">
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="btn-primary" id="btnSync">
+                        <span>🔄</span> Sync with GitHub
+                    </button>
+                    <button class="btn-primary" id="btnOpenVSCode">
+                        <span>📂</span> Open in VSCode
+                    </button>
+                    <button class="btn-primary" id="btnAIChat">
+                        <span>🤖</span> AI Chat
+                    </button>
+                    <button class="btn-primary" id="btnRepoSettings">
+                        <span>⚙️</span> Repository Settings
+                    </button>
+                </div>
+
+                <!-- About Section -->
+                <section class="section">
+                    <h2 class="section-title">About</h2>
+                    <div class="about-content">
+                        <p class="description" id="repoDescription">Loading description...</p>
+                        <div class="topics" id="repoTopics"></div>
+                        <div class="repo-links">
+                            <a href="#" class="link" id="repoUrl" target="_blank">🔗 Repository URL</a>
+                            <span class="meta" id="repoLicense">License: MIT</span>
+                            <span class="meta" id="repoCreated">Created: Loading...</span>
+                            <span class="meta" id="repoUpdated">Updated: Loading...</span>
+                            <span class="meta" id="repoLanguage">Language: Loading...</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Statistics Section -->
+                <section class="section">
+                    <h2 class="section-title">Repository Statistics</h2>
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="statStars">-</div>
+                            <div class="stat-label">⭐ Stars</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statWatchers">-</div>
+                            <div class="stat-label">👁️ Watchers</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statForks">-</div>
+                            <div class="stat-label">🍴 Forks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statCommits">-</div>
+                            <div class="stat-label">📝 Commits</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statBranches">-</div>
+                            <div class="stat-label">🌿 Branches</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statReleases">-</div>
+                            <div class="stat-label">🏷️ Releases</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="statSize">-</div>
+                            <div class="stat-label">📁 Size</div>
+                        </div>
+                    </div>
+                    <div class="language-bar" id="languageBar"></div>
+                </section>
+
+                <!-- Recent Activity Section -->
+                <section class="section">
+                    <h2 class="section-title">Recent Activity</h2>
+                    <div id="recentActivity">
+                        <div class="activity-loading">Loading activity...</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Issues Tab -->
+            <div class="tab-content" id="issues-tab">
+                <div class="tab-header">
+                    <h2>Issues</h2>
+                    <button class="btn-primary" id="btnNewIssue">+ New Issue</button>
+                </div>
+                <div class="filters">
+                    <button class="filter-btn active" data-state="open">Open</button>
+                    <button class="filter-btn" data-state="closed">Closed</button>
+                    <button class="filter-btn" data-state="all">All</button>
+                </div>
+                <div class="items-list" id="issuesList">
+                    <div class="loading">Loading issues...</div>
+                </div>
+            </div>
+
+            <!-- Pull Requests Tab -->
+            <div class="tab-content" id="pullrequests-tab">
+                <div class="tab-header">
+                    <h2>Pull Requests</h2>
+                    <button class="btn-primary" id="btnNewPR">+ New Pull Request</button>
+                </div>
+                <div class="filters">
+                    <button class="filter-btn active" data-state="open">Open</button>
+                    <button class="filter-btn" data-state="closed">Closed</button>
+                    <button class="filter-btn" data-state="all">All</button>
+                </div>
+                <div class="items-list" id="prsList">
+                    <div class="loading">Loading pull requests...</div>
+                </div>
+            </div>
+
+            <!-- Commits Tab -->
+            <div class="tab-content" id="commits-tab">
+                <div class="tab-header">
+                    <h2>Commits</h2>
+                    <select class="branch-selector" id="commitBranchSelector">
+                        <option value="">Select branch...</option>
+                    </select>
+                </div>
+                <div class="items-list" id="commitsList">
+                    <div class="loading">Loading commits...</div>
+                </div>
+            </div>
+
+            <!-- Branches Tab -->
+            <div class="tab-content" id="branches-tab">
+                <div class="tab-header">
+                    <h2>Branches</h2>
+                    <button class="btn-primary" id="btnNewBranch">+ New Branch</button>
+                </div>
+                <div class="items-list" id="branchesList">
+                    <div class="loading">Loading branches...</div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-content" id="settings-tab">
+                <div class="settings-content">
+                    <h2>Repository Settings</h2>
+                    <p>Configure repository-specific settings here.</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>

@@ -13,6 +13,7 @@ import { GitHubController } from './controllers/GitHubController';
 import { DescriptionGeneratorController } from './controllers/DescriptionGeneratorController';
 import { GitHubService } from './services/GitHubService';
 import { Profile, CreateProfileData, UpdateProfileData } from './types';
+import { WindowManager } from './windows/WindowManager';
 
 class App {
     private mainWindow: BrowserWindow | null = null;
@@ -23,6 +24,7 @@ class App {
     private aiManager: AIService;
     private descriptionGenerator: DescriptionGeneratorService;
     private githubManager: GitHubService | null = null;
+    private windowManager: WindowManager;
 
     // Controllers
     private profileController: ProfileController;
@@ -36,6 +38,7 @@ class App {
         this.db = new DatabaseService();
         this.aiManager = AIService.getInstance();
         this.descriptionGenerator = DescriptionGeneratorService.getInstance();
+        this.windowManager = new WindowManager();
 
         // Initialize controllers
         this.profileController = new ProfileController(this.db);
@@ -55,6 +58,7 @@ class App {
 
         this.setupElectronEvents();
         this.setupIpcHandlers();
+        this.registerGitHubWindowIPCHandlers();
     }
 
     private setupElectronEvents(): void {
@@ -384,6 +388,192 @@ class App {
                 return false;
             }
         );
+
+        // New GitHub Repository Manager Window handlers
+        ipcMain.handle(
+            'open-github-repo-window',
+            async (_: IpcMainInvokeEvent, owner: string, repo: string) => {
+                try {
+                    if (!this.mainWindow) return { success: false, error: 'No main window' };
+
+                    if (this.windowManager.isWindowOpen('github-window')) {
+                        this.windowManager.focusWindow('github-window');
+                        return { success: true, focused: true };
+                    }
+
+                    await this.windowManager.createGitHubWindow(this.mainWindow, owner, repo);
+                    return { success: true };
+                } catch (error: any) {
+                    console.error('Failed to open GitHub window:', error);
+                    return { success: false, error: error.message };
+                }
+            }
+        );
+
+        ipcMain.handle(
+            'github-get-repository-data',
+            async (_: IpcMainInvokeEvent, owner: string, repo: string) => {
+                await this.initGitHubManager();
+                try {
+                    if (!this.githubManager) {
+                        return { success: false, error: 'GitHub manager not initialized' };
+                    }
+                    const data = await this.githubManager.getRepository(owner, repo);
+                    return { success: true, data };
+                } catch (error: any) {
+                    return { success: false, error: error.message };
+                }
+            }
+        );
+
+        ipcMain.handle(
+            'github-get-pull-requests',
+            async (_: IpcMainInvokeEvent, owner: string, repo: string, state?: string) => {
+                await this.initGitHubManager();
+                try {
+                    if (!this.githubManager) {
+                        return { success: false, error: 'GitHub manager not initialized' };
+                    }
+                    const data = await this.githubManager.listPullRequests(
+                        owner,
+                        repo,
+                        state as 'open' | 'closed' | 'all'
+                    );
+                    return { success: true, data };
+                } catch (error: any) {
+                    return { success: false, error: error.message };
+                }
+            }
+        );
+
+        ipcMain.handle(
+            'github-get-commits',
+            async (_: IpcMainInvokeEvent, owner: string, repo: string, page?: number) => {
+                await this.initGitHubManager();
+                try {
+                    if (!this.githubManager) {
+                        return { success: false, error: 'GitHub manager not initialized' };
+                    }
+                    const data = await this.githubManager.listCommits(owner, repo, page);
+                    return { success: true, data };
+                } catch (error: any) {
+                    return { success: false, error: error.message };
+                }
+            }
+        );
+
+        ipcMain.handle(
+            'github-get-detailed-branches',
+            async (_: IpcMainInvokeEvent, owner: string, repo: string) => {
+                await this.initGitHubManager();
+                return this.githubController.listBranchesDetailed(owner, repo);
+            }
+        );
+
+        ipcMain.handle(
+            'github-get-repository-stats',
+            async (_: IpcMainInvokeEvent, owner: string, repo: string) => {
+                await this.initGitHubManager();
+                try {
+                    if (!this.githubManager) {
+                        return { success: false, error: 'GitHub manager not initialized' };
+                    }
+                    const repo_data = await this.githubManager.getRepository(owner, repo);
+                    return {
+                        success: true,
+                        data: {
+                            stars: repo_data.stargazers_count,
+                            watchers: repo_data.watchers_count,
+                            forks: repo_data.forks_count,
+                            size: repo_data.size,
+                        },
+                    };
+                } catch (error: any) {
+                    return { success: false, error: error.message };
+                }
+            }
+        );
+
+        ipcMain.handle(
+            'github-get-languages',
+            async (_: IpcMainInvokeEvent, owner: string, repo: string) => {
+                await this.initGitHubManager();
+                try {
+                    if (!this.githubManager) {
+                        return { success: false, error: 'GitHub manager not initialized' };
+                    }
+                    const data = await this.githubManager.getLanguages(owner, repo);
+                    return { success: true, data };
+                } catch (error: any) {
+                    return { success: false, error: error.message };
+                }
+            }
+        );
+
+        ipcMain.handle(
+            'github-get-contributors',
+            async (_: IpcMainInvokeEvent, owner: string, repo: string) => {
+                await this.initGitHubManager();
+                try {
+                    if (!this.githubManager) {
+                        return { success: false, error: 'GitHub manager not initialized' };
+                    }
+                    const data = await this.githubManager.listContributors(owner, repo);
+                    return { success: true, data };
+                } catch (error: any) {
+                    return { success: false, error: error.message };
+                }
+            }
+        );
+
+        ipcMain.handle('open-external', async (_: IpcMainInvokeEvent, url: string) => {
+            await shell.openExternal(url);
+            return true;
+        });
+
+        ipcMain.handle('open-in-vscode', async (_: IpcMainInvokeEvent, workspacePath: string) => {
+            // TODO: Implement opening workspace in VSCode
+            return true;
+        });
+
+        ipcMain.handle(
+            'open-ai-assistant-window',
+            async (
+                _: IpcMainInvokeEvent,
+                issueUrl: string,
+                issueTitle: string,
+                issueBody: string
+            ) => {
+                // TODO: Implement AI Assistant window
+                console.log('Opening AI assistant for:', issueTitle);
+                return true;
+            }
+        );
+
+        ipcMain.handle('close-github-window', async () => {
+            this.windowManager.closeWindow('github-window');
+            return true;
+        });
+
+        ipcMain.handle('minimize-github-window', async () => {
+            const window = this.windowManager.getWindow('github-window');
+            if (window && !window.isDestroyed()) {
+                window.minimize();
+            }
+            return true;
+        });
+
+        ipcMain.handle('maximize-github-window', async () => {
+            const window = this.windowManager.getWindow('github-window');
+            if (window && !window.isDestroyed()) {
+                if (window.isMaximized()) {
+                    window.unmaximize();
+                } else {
+                    window.maximize();
+                }
+            }
+            return true;
+        });
     }
 
     private async initGitHubManager() {
@@ -452,6 +642,49 @@ class App {
             console.error('Failed to create profile directories:', error);
             throw error;
         }
+    }
+
+    // Novos handlers IPC adicionados no PR #14
+    private registerGitHubWindowIPCHandlers(): void {
+        ipcMain.handle('github-window-ping', async () => {
+            return 'pong';
+        });
+
+        ipcMain.handle('github-window-ready', async () => {
+            console.log('GitHub Window reported ready');
+            return true;
+        });
+
+        ipcMain.handle('github-is-configured', async () => {
+            await this.initGitHubManager();
+            return !!this.githubManager && this.githubManager.isConfigured();
+        });
+
+        ipcMain.handle('github-get-auth-status', async () => {
+            await this.initGitHubManager();
+            try {
+                if (!this.githubManager) {
+                    return { isAuthenticated: false };
+                }
+                const status = await this.githubManager.getAuthStatus();
+                return status;
+            } catch (error) {
+                console.error('Failed to get GitHub auth status:', error);
+                return { isAuthenticated: false, error: (error as Error).message };
+            }
+        });
+
+        ipcMain.handle('run-diagnostics', async () => {
+            try {
+                // Importar função de diagnóstico
+                const { runDiagnostics } = require('./utils/diagnostics');
+                const report = await runDiagnostics();
+                return { success: true, report };
+            } catch (error) {
+                console.error('Error running diagnostics:', error);
+                return { success: false, error: (error as Error).message };
+            }
+        });
     }
 }
 
