@@ -1,14 +1,33 @@
 // GitHub Repository Manager - Main JavaScript
+// PR #14: Implement GitHub Repository Manager
 
 let currentRepo = null;
 let currentOwner = null;
 let currentTab = 'overview';
+let connectionStatus = {
+    mainProcess: false,
+    github: false,
+};
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('GitHub window initializing...');
     initializeWindow();
     setupEventListeners();
+    checkMainProcessConnection();
     loadRepositoryFromURL();
+
+    // Notificar o processo principal que a janela está pronta
+    window.githubWindowAPI
+        .notifyWindowReady()
+        .then(() => {
+            connectionStatus.mainProcess = true;
+            console.log('Main process connection established');
+        })
+        .catch(err => {
+            console.error('Failed to connect to main process:', err);
+            showError('Failed to connect to main process. Please restart the application.');
+        });
 });
 
 /**
@@ -21,9 +40,43 @@ async function initializeWindow() {
             showError('GitHub is not configured. Please configure GitHub token in settings.');
             return;
         }
+
+        // Verificar status da autenticação do GitHub
+        const authStatus = await window.githubWindowAPI.getGitHubAuthStatus();
+        connectionStatus.github = authStatus.isAuthenticated;
+
+        if (authStatus.isAuthenticated) {
+            console.log(`GitHub authenticated as ${authStatus.username}`);
+            document.getElementById('github-user').textContent = authStatus.username;
+            if (authStatus.avatar) {
+                document.getElementById('github-avatar').src = authStatus.avatar;
+                document.getElementById('github-avatar').style.display = 'block';
+            }
+        } else {
+            showError('GitHub authentication failed. Please check your token.');
+        }
     } catch (error) {
         console.error('Failed to check GitHub configuration:', error);
         showError('Failed to check GitHub configuration');
+    }
+}
+
+/**
+ * Verifica conexão com o processo principal
+ */
+async function checkMainProcessConnection() {
+    try {
+        const pingResult = await window.githubWindowAPI.ping();
+        connectionStatus.mainProcess = pingResult === 'pong';
+        console.log(`Main process connection: ${connectionStatus.mainProcess ? 'OK' : 'Failed'}`);
+
+        if (!connectionStatus.mainProcess) {
+            showError('Failed to connect to main process. Some features may not work properly.');
+        }
+    } catch (error) {
+        console.error('Connection check failed:', error);
+        connectionStatus.mainProcess = false;
+        showError('Connection to main process failed. Please restart the application.');
     }
 }
 

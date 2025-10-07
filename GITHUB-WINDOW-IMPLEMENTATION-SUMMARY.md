@@ -6,6 +6,10 @@ Successfully implemented a dedicated Electron window for GitHub repository manag
 
 ## ✅ Implementation Status: COMPLETE
 
+## 🔧 Correções do PR #14 - 7 de Outubro de 2025
+
+O PR #14 foi atualizado para corrigir problemas de funcionalidade na integração entre a janela GitHub e a aplicação principal:
+
 ### Phase 1: Infrastructure ✅
 
 - [x] Fix TypeScript compilation errors (added DOM and node types to tsconfig.json)
@@ -352,7 +356,7 @@ WindowManager:
 ## 🔗 Related Issues & PRs
 
 - Issue #13: GitHub Repository Manager - Janela Separada com AI Integration
-- PR #[TBD]: feat: Add GitHub Repository Manager window
+- PR #14: feat: Implement GitHub Repository Manager as separate Electron window with AI integration
 
 ## 👥 Contributors
 
@@ -362,5 +366,5 @@ WindowManager:
 ---
 
 **Status**: ✅ COMPLETE
-**Last Updated**: October 7, 2024
-**Version**: 1.0.0
+**Last Updated**: October 7, 2025
+**Version**: 1.0.1

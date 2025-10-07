@@ -25,6 +25,36 @@ export class GitHubService {
         }
     }
 
+    /**
+     * Verifica o status de autenticação do GitHub
+     * @returns Objeto contendo status de autenticação e informações do usuário
+     */
+    public async getAuthStatus() {
+        if (!this.isConfigured()) {
+            return {
+                isAuthenticated: false,
+                error: 'GitHub token is not configured',
+            };
+        }
+
+        try {
+            // Verifica autenticação obtendo dados do usuário
+            const { data } = await this.octokit.users.getAuthenticated();
+            return {
+                isAuthenticated: true,
+                username: data.login,
+                avatar: data.avatar_url,
+                token: config.getGitHubToken(),
+            };
+        } catch (error) {
+            console.error('Failed to get GitHub authentication status:', error);
+            return {
+                isAuthenticated: false,
+                error: (error as Error).message,
+            };
+        }
+    }
+
     public async updateToken(token: string) {
         if (!this.Octokit) {
             await this.initialize();

@@ -1,7 +1,17 @@
 import { contextBridge, ipcRenderer } from 'electron';
+// GitHub window IPC interfaces
+import { IssueState } from './types';
 
 // Expose protected methods for GitHub window
 contextBridge.exposeInMainWorld('githubWindowAPI', {
+    // Communication with main process
+    ping: () => ipcRenderer.invoke('github-window-ping'),
+    notifyWindowReady: () => ipcRenderer.invoke('github-window-ready'),
+
+    // GitHub Authentication
+    isGitHubConfigured: () => ipcRenderer.invoke('github-is-configured'),
+    getGitHubAuthStatus: () => ipcRenderer.invoke('github-get-auth-status'),
+
     // Get repository data
     getRepositoryData: (owner: string, repo: string) =>
         ipcRenderer.invoke('github-get-repository-data', owner, repo),
@@ -42,9 +52,6 @@ contextBridge.exposeInMainWorld('githubWindowAPI', {
     openIssueWithAI: (issueUrl: string, issueTitle: string, issueBody: string) =>
         ipcRenderer.invoke('open-ai-assistant-window', issueUrl, issueTitle, issueBody),
 
-    // Check if GitHub is configured
-    isGitHubConfigured: () => ipcRenderer.invoke('is-github-configured'),
-
     // Get GitHub token
     getGitHubToken: () => ipcRenderer.invoke('get-github-token'),
 
@@ -60,7 +67,11 @@ contextBridge.exposeInMainWorld('githubWindowAPI', {
     maximizeWindow: () => ipcRenderer.invoke('maximize-github-window'),
 
     // Listen to window events
-    onRepositoryChange: (callback: (data: any) => void) => {
+    onRepositoryChange: (callback: (data: { owner: string; repo: string }) => void) => {
         ipcRenderer.on('github-window-repository-changed', (_event, data) => callback(data));
+        return () => ipcRenderer.removeAllListeners('github-window-repository-changed');
     },
+
+    // Diagnósticos - Adicionado no PR #14
+    runDiagnostics: () => ipcRenderer.invoke('run-diagnostics'),
 });

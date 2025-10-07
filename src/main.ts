@@ -58,6 +58,7 @@ class App {
 
         this.setupElectronEvents();
         this.setupIpcHandlers();
+        this.registerGitHubWindowIPCHandlers();
     }
 
     private setupElectronEvents(): void {
@@ -641,6 +642,49 @@ class App {
             console.error('Failed to create profile directories:', error);
             throw error;
         }
+    }
+
+    // Novos handlers IPC adicionados no PR #14
+    private registerGitHubWindowIPCHandlers(): void {
+        ipcMain.handle('github-window-ping', async () => {
+            return 'pong';
+        });
+
+        ipcMain.handle('github-window-ready', async () => {
+            console.log('GitHub Window reported ready');
+            return true;
+        });
+
+        ipcMain.handle('github-is-configured', async () => {
+            await this.initGitHubManager();
+            return !!this.githubManager && this.githubManager.isConfigured();
+        });
+
+        ipcMain.handle('github-get-auth-status', async () => {
+            await this.initGitHubManager();
+            try {
+                if (!this.githubManager) {
+                    return { isAuthenticated: false };
+                }
+                const status = await this.githubManager.getAuthStatus();
+                return status;
+            } catch (error) {
+                console.error('Failed to get GitHub auth status:', error);
+                return { isAuthenticated: false, error: (error as Error).message };
+            }
+        });
+
+        ipcMain.handle('run-diagnostics', async () => {
+            try {
+                // Importar função de diagnóstico
+                const { runDiagnostics } = require('./utils/diagnostics');
+                const report = await runDiagnostics();
+                return { success: true, report };
+            } catch (error) {
+                console.error('Error running diagnostics:', error);
+                return { success: false, error: (error as Error).message };
+            }
+        });
     }
 }
 
