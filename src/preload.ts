@@ -50,6 +50,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getAvailableProviders: (): Promise<Array<{ name: 'gemini' | 'openai'; configured: boolean }>> =>
         ipcRenderer.invoke('get-available-providers'),
 
+    generateProfileDescription: (
+        profileName: string,
+        language: string,
+        workspacePath?: string,
+        aiProvider?: string,
+        aiModel?: string
+    ): Promise<{ success: boolean; description?: string; error?: string }> =>
+        ipcRenderer.invoke(
+            'generate-profile-description',
+            profileName,
+            language,
+            workspacePath,
+            aiProvider,
+            aiModel
+        ),
+
     getProfilePaths: (
         profileName: string
     ): Promise<{ baseDir: string; dataDir: string; extensionsDir: string }> =>
@@ -83,6 +99,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     isGitHubConfigured: (): Promise<boolean> => ipcRenderer.invoke('is-github-configured'),
 
+    githubValidateToken: (
+        token: string
+    ): Promise<{ valid: boolean; user?: { login: string; name: string; avatarUrl: string } }> =>
+        ipcRenderer.invoke('github-validate-token', token),
+
+    githubListUserOrgs: (): Promise<
+        Array<{ login: string; name: string; avatarUrl: string; description: string }>
+    > => ipcRenderer.invoke('github-list-user-orgs'),
+
+    githubListBranchesDetailed: (
+        owner: string,
+        repo: string
+    ): Promise<
+        Array<{
+            name: string;
+            protected: boolean;
+            sha: string;
+            lastCommit?: { message: string; author: string; date: string };
+        }>
+    > => ipcRenderer.invoke('github-list-branches-detailed', owner, repo),
+
     // Directory picker
     selectDirectory: (): Promise<string | null> => ipcRenderer.invoke('select-directory'),
 
@@ -92,6 +129,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ): Promise<
         Array<{ name: string; fullName: string; description: string; defaultBranch: string }>
     > => ipcRenderer.invoke('github-list-repos', owner),
+
+    // GitHub Window
+    openGitHubWindow: (profileId: number): Promise<boolean> =>
+        ipcRenderer.invoke('open-github-window', profileId),
+
+    getGitHubWindowProfile: (): Promise<any> => ipcRenderer.invoke('get-github-window-profile'),
+
+    launchProfileWithIssue: (profileId: number, issueNumber: number): Promise<boolean> =>
+        ipcRenderer.invoke('launch-profile-with-issue', profileId, issueNumber),
 });
 
 // Define the API interface for TypeScript
@@ -118,6 +164,13 @@ declare global {
             getAvailableProviders: () => Promise<
                 Array<{ name: 'gemini' | 'openai'; configured: boolean }>
             >;
+            generateProfileDescription: (
+                profileName: string,
+                language: string,
+                workspacePath?: string,
+                aiProvider?: string,
+                aiModel?: string
+            ) => Promise<{ success: boolean; description?: string; error?: string }>;
             getProfilePaths: (
                 profileName: string
             ) => Promise<{ baseDir: string; dataDir: string; extensionsDir: string }>;
@@ -139,6 +192,26 @@ declare global {
             githubListBranches: (owner: string, repo: string) => Promise<string[]>;
             githubValidateRepo: (owner: string, repo: string) => Promise<boolean>;
             isGitHubConfigured: () => Promise<boolean>;
+            githubValidateToken: (
+                token: string
+            ) => Promise<{
+                valid: boolean;
+                user?: { login: string; name: string; avatarUrl: string };
+            }>;
+            githubListUserOrgs: () => Promise<
+                Array<{ login: string; name: string; avatarUrl: string; description: string }>
+            >;
+            githubListBranchesDetailed: (
+                owner: string,
+                repo: string
+            ) => Promise<
+                Array<{
+                    name: string;
+                    protected: boolean;
+                    sha: string;
+                    lastCommit?: { message: string; author: string; date: string };
+                }>
+            >;
             selectDirectory: () => Promise<string | null>;
             githubListRepos: (owner: string) => Promise<
                 Array<{
@@ -148,6 +221,9 @@ declare global {
                     defaultBranch: string;
                 }>
             >;
+            openGitHubWindow: (profileId: number) => Promise<boolean>;
+            getGitHubWindowProfile: () => Promise<any>;
+            launchProfileWithIssue: (profileId: number, issueNumber: number) => Promise<boolean>;
         };
     }
 }

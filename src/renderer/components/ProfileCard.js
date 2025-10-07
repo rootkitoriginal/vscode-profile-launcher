@@ -28,6 +28,13 @@ export class ProfileCard {
             ? `<span class="ai-badge">${profile.aiProvider.toUpperCase()}</span>`
             : '';
 
+        const githubButton =
+            profile.githubRepo && profile.githubRepo.owner && profile.githubRepo.repo
+                ? `<button class="btn btn-sm github-btn" data-profile-id="${profile.id}" title="Open GitHub Integration">
+                     <span>🔗 GitHub</span>
+                   </button>`
+                : '';
+
         card.innerHTML = `
             <div class="profile-header">
                 <h3 class="profile-name">${escapeHtml(profile.name)}${aiInfo}</h3>
@@ -38,6 +45,7 @@ export class ProfileCard {
             ${profile.workspacePath ? `<div class="profile-path">${escapeHtml(profile.workspacePath)}</div>` : ''}
             <div class="profile-footer">
                 <span>${lastUsed}</span>
+                ${githubButton}
             </div>
         `;
 
@@ -55,6 +63,15 @@ export class ProfileCard {
             menuBtn.addEventListener('click', e => {
                 e.stopPropagation();
                 handlers.onMenuClick(e, profile);
+            });
+        }
+
+        // GitHub button handler
+        const githubBtn = card.querySelector('.github-btn');
+        if (githubBtn && handlers.onGitHubClick) {
+            githubBtn.addEventListener('click', e => {
+                e.stopPropagation();
+                handlers.onGitHubClick(profile);
             });
         }
 

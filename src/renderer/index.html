@@ -16,12 +16,17 @@
                 <h1 class="app-title">VS Code Profile Launcher</h1>
             </div>
             <div class="header-right">
-                <button id="settingsBtn" class="btn btn-secondary">
-                    <span class="icon">⚙️</span>
+                <button id="keyboardShortcutsBtn" class="btn btn-secondary" 
+                        title="Keyboard Shortcuts (F1)" 
+                        aria-label="Show keyboard shortcuts">
+                    <span class="icon" aria-hidden="true">⌨️</span>
+                </button>
+                <button id="settingsBtn" class="btn btn-secondary" aria-label="Open settings">
+                    <span class="icon" aria-hidden="true">⚙️</span>
                     Settings
                 </button>
-                <button id="createProfileBtn" class="btn btn-primary">
-                    <span class="icon">+</span>
+                <button id="createProfileBtn" class="btn btn-primary" aria-label="Create new profile">
+                    <span class="icon" aria-hidden="true">+</span>
                     New Profile
                 </button>
             </div>
@@ -30,9 +35,11 @@
         <!-- Search and Filter -->
         <div class="search-section">
             <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Search profiles..." class="search-input">
+                <input type="text" id="searchInput" placeholder="Search profiles..." 
+                       class="search-input" aria-label="Search profiles">
                 <div class="filter-container">
-                    <select id="languageFilter" class="language-filter">
+                    <select id="languageFilter" class="language-filter" 
+                            aria-label="Filter by programming language">
                         <option value="">All Languages</option>
                         <option value="TypeScript">TypeScript</option>
                         <option value="JavaScript">JavaScript</option>
@@ -50,9 +57,9 @@
         </div>
 
         <!-- Main Content -->
-        <main class="main">
+        <main class="main" role="main">
             <!-- Profiles Grid -->
-            <div id="profilesGrid" class="profiles-grid">
+            <div id="profilesGrid" class="profiles-grid" role="grid" aria-label="VS Code profiles">
                 <!-- Profiles will be dynamically inserted here -->
             </div>
 
@@ -69,11 +76,12 @@
     </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal" class="modal" style="display: none;">
+    <div id="settingsModal" class="modal" style="display: none;" role="dialog" 
+         aria-labelledby="settingsModalTitle" aria-modal="true">
         <div class="modal-content modal-large">
             <div class="modal-header">
-                <h2>Settings</h2>
-                <button id="closeSettingsModal" class="close-btn">&times;</button>
+                <h2 id="settingsModalTitle">Settings</h2>
+                <button id="closeSettingsModal" class="close-btn" aria-label="Close settings">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="settings-tabs">
@@ -107,6 +115,9 @@
                         <div class="form-group">
                             <label for="githubToken">GitHub Personal Access Token</label>
                             <input type="password" id="githubToken" class="form-input" placeholder="Enter your GitHub token">
+                            <button type="button" id="validateGitHubTokenBtn" class="btn btn-secondary btn-sm" style="margin-top: 8px;">
+                                🔍 Validate Token
+                            </button>
                             <small class="form-hint">
                                 Create a token at <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings</a><br>
                                 Required scopes: repo, workflow, read:org
@@ -137,11 +148,12 @@
     </div>
 
     <!-- Create/Edit Profile Modal -->
-    <div id="profileModal" class="modal" style="display: none;">
+    <div id="profileModal" class="modal" style="display: none;" role="dialog" 
+         aria-labelledby="modalTitle" aria-modal="true">
         <div class="modal-content modal-large">
             <div class="modal-header">
                 <h2 id="modalTitle">Create New Profile</h2>
-                <button id="closeModal" class="close-btn">&times;</button>
+                <button id="closeModal" class="close-btn" aria-label="Close modal">&times;</button>
             </div>
             <form id="profileForm" class="modal-body">
                 <div class="form-row">
@@ -186,6 +198,10 @@
                 <div class="form-group">
                     <label for="profileDescription">Description</label>
                     <textarea id="profileDescription" name="description" rows="2" class="form-textarea" placeholder="Optional description for this profile..."></textarea>
+                    <button type="button" id="generateDescriptionBtn" class="btn btn-secondary btn-sm" style="margin-top: 8px;">
+                        🤖 Generate Description with AI
+                    </button>
+                    <small class="form-hint" id="descriptionHint" style="display: none; margin-top: 4px;"></small>
                 </div>
                 
                 <div class="form-group">

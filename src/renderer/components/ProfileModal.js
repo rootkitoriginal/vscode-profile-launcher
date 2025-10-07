@@ -28,6 +28,7 @@ export class ProfileModal {
         this.clearEnvVariables();
         this.clearGitHubSelections();
         this.populateAIProviders();
+        this.setupValidation();
 
         this.show();
         document.getElementById('profileName').focus();
@@ -82,6 +83,7 @@ export class ProfileModal {
         }
 
         document.getElementById('saveBtn').textContent = 'Update Profile';
+        this.setupValidation();
         this.show();
         document.getElementById('profileName').focus();
     }
@@ -252,5 +254,187 @@ export class ProfileModal {
      */
     getCurrentProfile() {
         return this.currentProfile;
+    }
+
+    /**
+     * Generate AI-powered description for the profile
+     */
+    async generateDescription() {
+        const profileName = document.getElementById('profileName').value;
+        const language = document.getElementById('profileLanguage').value;
+        const workspacePath = document.getElementById('workspacePath').value;
+        const aiProvider = document.getElementById('aiProvider').value;
+        const aiModel = document.getElementById('aiModel').value;
+
+        if (!profileName) {
+            this.showDescriptionHint('⚠ Please enter a profile name first', 'error');
+            return;
+        }
+
+        if (!language) {
+            this.showDescriptionHint('⚠ Please select a programming language first', 'error');
+            return;
+        }
+
+        const generateBtn = document.getElementById('generateDescriptionBtn');
+        const originalText = generateBtn.textContent;
+
+        try {
+            // Check if AI providers are configured
+            const providers = await window.electronAPI.getAvailableProviders();
+            const hasConfiguredProvider = providers.some(p => p.configured);
+            
+            if (!hasConfiguredProvider) {
+                this.showDescriptionHint(
+                    '⚠ No AI provider configured. Please configure Gemini or OpenAI API key in Settings.',
+                    'error'
+                );
+                return;
+            }
+
+            generateBtn.textContent = '⏳ Generating...';
+            generateBtn.disabled = true;
+
+            // Add timeout to prevent hanging (30 seconds)
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000);
+            });
+
+            const generationPromise = window.electronAPI.generateProfileDescription(
+                profileName,
+                language,
+                workspacePath || undefined,
+                aiProvider || undefined,
+                aiModel || undefined
+            );
+
+            const result = await Promise.race([generationPromise, timeoutPromise]);
+
+            if (result.success && result.description) {
+                document.getElementById('profileDescription').value = result.description;
+                this.showDescriptionHint('✓ Description generated successfully!', 'success');
+            } else {
+                this.showDescriptionHint(
+                    `✗ ${result.error || 'Unknown error'}`,
+                    'error'
+                );
+            }
+        } catch (error) {
+            this.showDescriptionHint(`✗ Error: ${error.message}`, 'error');
+        } finally {
+            generateBtn.textContent = originalText;
+            generateBtn.disabled = false;
+        }
+    }
+
+    /**
+     * Show hint message below description field
+     */
+    showDescriptionHint(message, type = 'info') {
+        const hint = document.getElementById('descriptionHint');
+        hint.textContent = message;
+        hint.style.display = 'block';
+        hint.style.fontSize = '13px';
+        hint.style.fontWeight = type === 'error' ? '500' : 'normal';
+        hint.style.color = type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#666';
+
+        // Auto-hide success messages after 5 seconds, but keep error messages visible longer
+        const hideDelay = type === 'error' ? 10000 : 5000;
+        setTimeout(() => {
+            hint.style.display = 'none';
+        }, hideDelay);
+    }
+
+    /**
+     * Setup real-time validation for form fields
+     */
+    setupValidation() {
+        const profileName = document.getElementById('profileName');
+        const profileLanguage = document.getElementById('profileLanguage');
+
+        if (profileName) {
+            profileName.addEventListener('input', () => {
+                this.validateProfileName(profileName);
+            });
+            profileName.addEventListener('blur', () => {
+                this.validateProfileName(profileName);
+            });
+        }
+
+        if (profileLanguage) {
+            profileLanguage.addEventListener('change', () => {
+                this.validateLanguage(profileLanguage);
+            });
+        }
+    }
+
+    /**
+     * Validate profile name field
+     */
+    validateProfileName(input) {
+        const value = input.value.trim();
+        let errorMessage = '';
+
+        if (!value) {
+            errorMessage = 'Profile name is required';
+        } else if (value.length < 2) {
+            errorMessage = 'Profile name must be at least 2 characters';
+        } else if (value.length > 100) {
+            errorMessage = 'Profile name must be less than 100 characters';
+        } else if (!/^[a-zA-Z0-9\s\-_.]+$/.test(value)) {
+            errorMessage = 'Profile name can only contain letters, numbers, spaces, and -_.';
+        }
+
+        this.showValidationError(input, errorMessage);
+        return !errorMessage;
+    }
+
+    /**
+     * Validate language field
+     */
+    validateLanguage(select) {
+        const value = select.value;
+        const errorMessage = !value ? 'Please select a programming language' : '';
+
+        this.showValidationError(select, errorMessage);
+        return !errorMessage;
+    }
+
+    /**
+     * Show validation error for a field
+     */
+    showValidationError(element, message) {
+        // Remove existing error message
+        const existingError = element.parentElement.querySelector('.validation-error');
+        if (existingError) {
+            existingError.remove();
+        }
+
+        // Remove error styling
+        element.classList.remove('input-error');
+
+        if (message) {
+            // Add error styling
+            element.classList.add('input-error');
+
+            // Create error message element
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'validation-error';
+            errorDiv.textContent = message;
+            element.parentElement.appendChild(errorDiv);
+        }
+    }
+
+    /**
+     * Validate entire form
+     */
+    validateForm() {
+        const profileName = document.getElementById('profileName');
+        const profileLanguage = document.getElementById('profileLanguage');
+
+        const isNameValid = this.validateProfileName(profileName);
+        const isLanguageValid = this.validateLanguage(profileLanguage);
+
+        return isNameValid && isLanguageValid;
     }
 }

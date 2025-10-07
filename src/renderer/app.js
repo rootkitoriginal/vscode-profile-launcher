@@ -8,9 +8,10 @@ import { ProfileCard } from './components/ProfileCard.js';
 import { ProfileModal } from './components/ProfileModal.js';
 import { SettingsModal } from './components/SettingsModal.js';
 import { GitHubModal } from './components/GitHubModal.js';
+import { GitHubIntegration } from './components/GitHubIntegration.js';
 import { MonacoEditor } from './components/MonacoEditor.js';
 import { showLoading, hideLoading, showSuccess, showError } from './utils/dom.js';
-import { escapeHtml, formatDate } from './utils/formatters.js';
+import keyboardManager from './utils/keyboard.js';
 
 // Application state
 let profiles = [];
@@ -21,6 +22,7 @@ let appConfig = {};
 let profileModal = null;
 let settingsModal = null;
 let githubModal = null;
+let githubIntegration = null;
 let monacoEditor = null;
 
 // DOM elements
@@ -35,6 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await initializeComponents();
     await loadInitialData();
     setupEventListeners();
+    setupKeyboardShortcuts();
 });
 
 /**
@@ -44,10 +47,14 @@ async function initializeComponents() {
     profileModal = new ProfileModal();
     settingsModal = new SettingsModal();
     githubModal = new GitHubModal();
+    githubIntegration = new GitHubIntegration();
     monacoEditor = new MonacoEditor();
 
     // Initialize Monaco Editor library
     await MonacoEditor.initialize();
+
+    // Initialize GitHub integration
+    await githubIntegration.initialize();
 }
 
 /**
@@ -89,6 +96,7 @@ function renderProfiles(profilesToRender = profiles) {
         onLaunch: launchVSCode,
         onContextMenu: showContextMenu,
         onMenuClick: showContextMenu,
+        onGitHubClick: openGitHubWindow,
     });
 }
 
@@ -103,6 +111,10 @@ function setupEventListeners() {
 
     document.getElementById('settingsBtn').addEventListener('click', async () => {
         await settingsModal.show();
+    });
+
+    document.getElementById('keyboardShortcutsBtn')?.addEventListener('click', () => {
+        showKeyboardShortcutsHelp();
     });
 
     // Profile modal controls
@@ -128,6 +140,20 @@ function setupEventListeners() {
         profileModal.setAIProviders(aiProviders);
     });
 
+    // GitHub token validation button
+    document.getElementById('validateGitHubTokenBtn')?.addEventListener('click', async () => {
+        const token = document.getElementById('githubToken').value.trim();
+        if (token) {
+            await githubIntegration.validateToken(token);
+        } else {
+            const statusDiv = document.getElementById('githubStatus');
+            if (statusDiv) {
+                statusDiv.innerHTML =
+                    '<span style="color: #e74c3c;">✗ Please enter a token first</span>';
+            }
+        }
+    });
+
     // Settings tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', e => {
@@ -151,6 +177,12 @@ function setupEventListeners() {
     document.getElementById('aiProvider')?.addEventListener('change', e => {
         profileModal.updateAIModels(e.target.value);
     });
+
+    // Generate description button
+    document.getElementById('generateDescriptionBtn')?.addEventListener('click', () => {
+        profileModal.generateDescription();
+    });
+
     // Directory picker
     document.getElementById('selectWorkspacePath')?.addEventListener('click', selectWorkspacePath);
 
@@ -283,18 +315,29 @@ async function handleDeleteProfile() {
  */
 async function handleProfileSubmit(e) {
     e.preventDefault();
+    console.log('📝 Form submit event triggered');
+
+    // Validate form using custom validation
+    const isValid = profileModal.validateForm();
+    console.log('🔍 Form validation result:', isValid);
+    
+    if (!isValid) {
+        console.log('❌ Form validation failed - preventing submission');
+        showError('Please fix the validation errors before saving');
+        return;
+    }
 
     try {
         showLoading();
         console.log('🚀 Starting profile submit...');
         const formData = new FormData(e.target);
-        
+
         // Get and validate required fields
         const name = formData.get('name')?.trim();
         const language = formData.get('language')?.trim();
-        
-        console.log('📝 Form data:', { name, language });
-        
+
+        console.log('📝 Form data collected:', { name, language });
+
         // Validate required fields
         if (!name || name === '') {
             throw new Error('Profile name is required');
@@ -302,7 +345,7 @@ async function handleProfileSubmit(e) {
         if (!language || language === '') {
             throw new Error('Profile language is required');
         }
-        
+
         const profileData = {
             name: name,
             language: language,
@@ -314,14 +357,17 @@ async function handleProfileSubmit(e) {
             githubRepo: {
                 owner: formData.get('githubOwner')?.trim() || null,
                 repo: formData.get('githubRepo')?.trim() || null,
-                branch: formData.get('githubBranch')?.trim() || null
-            }
+                branch: formData.get('githubBranch')?.trim() || null,
+            },
         };
-        
+
         console.log('💾 Profile data to save:', profileData);
-        
+
         if (profileModal.inEditMode()) {
             const currentProfile = profileModal.getCurrentProfile();
+            if (!currentProfile || !currentProfile.id) {
+                throw new Error('No profile selected for editing');
+            }
             console.log('✏️ Updating profile:', currentProfile.id);
             await window.electronAPI.updateProfile(currentProfile.id, profileData);
             showSuccess('Profile updated successfully!');
@@ -348,6 +394,23 @@ async function handleProfileSubmit(e) {
 }
 
 /**
+ * Open GitHub integration window for profile
+ */
+async function openGitHubWindow(profile) {
+    if (!profile.githubRepo || !profile.githubRepo.owner || !profile.githubRepo.repo) {
+        showError('GitHub repository not configured for this profile');
+        return;
+    }
+
+    try {
+        await window.electronAPI.openGitHubWindow(profile.id);
+    } catch (error) {
+        console.error('Error opening GitHub window:', error);
+        showError('Failed to open GitHub integration window');
+    }
+}
+
+/**
  * Launch VS Code with profile
  */
 async function launchVSCode(profile) {
@@ -355,10 +418,7 @@ async function launchVSCode(profile) {
         showLoading();
         await window.electronAPI.launchVSCode(profile);
 
-        // Update last used timestamp
-        await window.electronAPI.updateLastUsed(profile.id);
-
-        // Reload profiles
+        // Reload profiles to get updated lastUsed timestamp
         profiles = await window.electronAPI.getProfiles();
         renderProfiles();
 
@@ -440,16 +500,156 @@ async function handleGitHubRepoChange(e) {
 }
 
 /**
+ * Setup keyboard shortcuts
+ */
+function setupKeyboardShortcuts() {
+    // Initialize keyboard manager
+    keyboardManager.initialize();
+
+    // Ctrl+N - Create new profile
+    keyboardManager.register(
+        'ctrl+n',
+        () => {
+            profileModal.showCreate();
+        },
+        'Create new profile'
+    );
+
+    // Ctrl+E - Edit selected profile (currently not implemented - would need profile selection)
+    // For now, we'll show a message
+    keyboardManager.register(
+        'ctrl+e',
+        () => {
+            if (currentContextProfile) {
+                handleEditProfile();
+            } else {
+                showError('Please select a profile first (right-click on a profile card)');
+            }
+        },
+        'Edit selected profile'
+    );
+
+    // Ctrl+, - Open settings
+    keyboardManager.register(
+        'ctrl+,',
+        async () => {
+            await settingsModal.show();
+        },
+        'Open settings'
+    );
+
+    // Ctrl+S - Save in modals (when applicable)
+    keyboardManager.register(
+        'ctrl+s',
+        e => {
+            // Check if profile modal is open
+            if (profileModal.modal?.style.display === 'flex') {
+                document.getElementById('profileForm')?.dispatchEvent(new Event('submit'));
+            }
+            // Check if settings modal is open
+            else if (settingsModal.modal?.style.display === 'flex') {
+                document.getElementById('saveSettingsBtn')?.click();
+            }
+        },
+        'Save current modal'
+    );
+
+    // Escape - Close modals
+    keyboardManager.register(
+        'escape',
+        () => {
+            profileModal.hide();
+            settingsModal.hide();
+            githubModal.hide();
+            hideContextMenu();
+        },
+        'Close modals and menus'
+    );
+
+    // Ctrl+F - Focus search
+    keyboardManager.register(
+        'ctrl+f',
+        () => {
+            searchInput?.focus();
+        },
+        'Focus search'
+    );
+
+    // Ctrl+R - Reload profiles
+    keyboardManager.register(
+        'ctrl+r',
+        async () => {
+            await loadInitialData();
+            showSuccess('Profiles reloaded');
+        },
+        'Reload profiles'
+    );
+
+    // F1 - Show keyboard shortcuts help
+    keyboardManager.register(
+        'f1',
+        () => {
+            showKeyboardShortcutsHelp();
+        },
+        'Show keyboard shortcuts'
+    );
+}
+
+/**
+ * Show keyboard shortcuts help dialog
+ */
+function showKeyboardShortcutsHelp() {
+    const shortcuts = keyboardManager.getShortcuts();
+    const shortcutsHtml = shortcuts
+        .map(
+            s => `
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+            <span style="color: var(--text-secondary);">${s.description}</span>
+            <kbd style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; font-family: monospace;">${s.key.replace(/ctrl/g, 'Ctrl').replace(/alt/g, 'Alt').replace(/shift/g, 'Shift').replace(/\+/g, ' + ')}</kbd>
+        </div>
+    `
+        )
+        .join('');
+
+    const helpHtml = `
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                    background: var(--bg-secondary); padding: 24px; border-radius: 8px; 
+                    border: 1px solid var(--border-color); max-width: 500px; width: 90%; 
+                    max-height: 80vh; overflow-y: auto; z-index: 10000; box-shadow: var(--shadow);">
+            <h3 style="margin-top: 0; margin-bottom: 16px; color: var(--text-primary);">⌨️ Keyboard Shortcuts</h3>
+            <div>
+                ${shortcutsHtml}
+            </div>
+            <button onclick="this.parentElement.remove()" 
+                    style="margin-top: 16px; width: 100%; padding: 8px; background: var(--accent-color); 
+                           color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Close (Esc)
+            </button>
+        </div>
+        <div onclick="this.previousElementSibling.remove(); this.remove();" 
+             style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+                    background: rgba(0, 0, 0, 0.5); z-index: 9999;"></div>
+    `;
+
+    const container = document.createElement('div');
+    container.innerHTML = helpHtml;
+    document.body.appendChild(container);
+}
+
+/**
  * Export components to global scope for debugging and HTML event handlers
  */
 window.app = {
     profileModal,
     settingsModal,
     githubModal,
+    githubIntegration,
     monacoEditor,
+    keyboardManager,
     profiles,
     reload: async () => {
         profiles = await window.electronAPI.getProfiles();
         renderProfiles();
     },
+    showShortcuts: showKeyboardShortcutsHelp,
 };

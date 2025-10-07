@@ -223,6 +223,115 @@ export class GitHubService {
             throw new Error(`Failed to fetch repositories: ${error}`);
         }
     }
+
+    /**
+     * Validate GitHub token and get authenticated user info
+     */
+    public async validateToken(
+        token: string
+    ): Promise<{ valid: boolean; user?: { login: string; name: string; avatarUrl: string } }> {
+        try {
+            if (!this.Octokit) {
+                await this.initialize();
+            }
+
+            const tempOctokit = new this.Octokit({
+                auth: token,
+            });
+
+            const response = await tempOctokit.rest.users.getAuthenticated();
+
+            return {
+                valid: true,
+                user: {
+                    login: response.data.login,
+                    name: response.data.name || response.data.login,
+                    avatarUrl: response.data.avatar_url,
+                },
+            };
+        } catch (error) {
+            console.error('Error validating token:', error);
+            return { valid: false };
+        }
+    }
+
+    /**
+     * List organizations for the authenticated user
+     */
+    public async listUserOrganizations(): Promise<
+        Array<{ login: string; name: string; avatarUrl: string; description: string }>
+    > {
+        if (!this.octokit) {
+            await this.initialize();
+        }
+
+        if (!this.octokit) {
+            throw new Error('GitHub token not configured');
+        }
+
+        try {
+            const response = await this.octokit.rest.orgs.listForAuthenticatedUser({
+                per_page: 100,
+            });
+
+            return response.data.map((org: any) => ({
+                login: org.login,
+                name: org.name || org.login,
+                avatarUrl: org.avatar_url,
+                description: org.description || '',
+            }));
+        } catch (error) {
+            console.error('Error fetching organizations:', error);
+            throw new Error(`Failed to fetch organizations: ${error}`);
+        }
+    }
+
+    /**
+     * Get detailed branch information including last commit
+     */
+    public async listBranchesDetailed(
+        owner: string,
+        repo: string
+    ): Promise<
+        Array<{
+            name: string;
+            protected: boolean;
+            sha: string;
+            lastCommit?: { message: string; author: string; date: string };
+        }>
+    > {
+        if (!this.octokit) {
+            await this.initialize();
+        }
+
+        if (!this.octokit) {
+            throw new Error('GitHub token not configured');
+        }
+
+        try {
+            const response = await this.octokit.rest.repos.listBranches({
+                owner,
+                repo,
+                per_page: 100,
+            });
+
+            return response.data.map((branch: any) => ({
+                name: branch.name,
+                protected: branch.protected || false,
+                sha: branch.commit.sha,
+                lastCommit: branch.commit
+                    ? {
+                          message: branch.commit.commit?.message || '',
+                          author: branch.commit.commit?.author?.name || '',
+                          date: branch.commit.commit?.author?.date || '',
+                      }
+                    : undefined,
+            }));
+        } catch (error) {
+            console.error('Error fetching detailed branches:', error);
+            throw new Error(`Failed to fetch detailed branches: ${error}`);
+        }
+    }
 }
 
 export default new GitHubService();

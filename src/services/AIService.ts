@@ -66,10 +66,16 @@ export class AIService {
 
     public async generateCode(request: AIRequest): Promise<AIResponse> {
         try {
+            // Add timeout wrapper for all AI API calls (25 seconds)
+            const timeoutPromise = new Promise<AIResponse>((_, reject) => {
+                setTimeout(() => reject(new Error('AI request timed out after 25 seconds')), 25000);
+            });
+
+            let generationPromise: Promise<AIResponse>;
             if (request.provider === 'gemini') {
-                return await this.generateWithGemini(request);
+                generationPromise = this.generateWithGemini(request);
             } else if (request.provider === 'openai') {
-                return await this.generateWithOpenAI(request);
+                generationPromise = this.generateWithOpenAI(request);
             } else {
                 return {
                     content: '',
@@ -77,6 +83,8 @@ export class AIService {
                     error: 'Unsupported AI provider',
                 };
             }
+
+            return await Promise.race([generationPromise, timeoutPromise]);
         } catch (error) {
             return {
                 content: '',
