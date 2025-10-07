@@ -11,6 +11,7 @@ import { GitHubModal } from './components/GitHubModal.js';
 import { GitHubIntegration } from './components/GitHubIntegration.js';
 import { MonacoEditor } from './components/MonacoEditor.js';
 import { showLoading, hideLoading, showSuccess, showError } from './utils/dom.js';
+import keyboardManager from './utils/keyboard.js';
 
 // Application state
 let profiles = [];
@@ -36,6 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await initializeComponents();
     await loadInitialData();
     setupEventListeners();
+    setupKeyboardShortcuts();
 });
 
 /**
@@ -108,6 +110,10 @@ function setupEventListeners() {
 
     document.getElementById('settingsBtn').addEventListener('click', async () => {
         await settingsModal.show();
+    });
+
+    document.getElementById('keyboardShortcutsBtn')?.addEventListener('click', () => {
+        showKeyboardShortcutsHelp();
     });
 
     // Profile modal controls
@@ -465,6 +471,143 @@ async function handleGitHubRepoChange(e) {
 }
 
 /**
+ * Setup keyboard shortcuts
+ */
+function setupKeyboardShortcuts() {
+    // Initialize keyboard manager
+    keyboardManager.initialize();
+
+    // Ctrl+N - Create new profile
+    keyboardManager.register(
+        'ctrl+n',
+        () => {
+            profileModal.showCreate();
+        },
+        'Create new profile'
+    );
+
+    // Ctrl+E - Edit selected profile (currently not implemented - would need profile selection)
+    // For now, we'll show a message
+    keyboardManager.register(
+        'ctrl+e',
+        () => {
+            if (currentContextProfile) {
+                handleEditProfile();
+            } else {
+                showError('Please select a profile first (right-click on a profile card)');
+            }
+        },
+        'Edit selected profile'
+    );
+
+    // Ctrl+, - Open settings
+    keyboardManager.register(
+        'ctrl+,',
+        async () => {
+            await settingsModal.show();
+        },
+        'Open settings'
+    );
+
+    // Ctrl+S - Save in modals (when applicable)
+    keyboardManager.register(
+        'ctrl+s',
+        e => {
+            // Check if profile modal is open
+            if (profileModal.modal?.style.display === 'flex') {
+                document.getElementById('profileForm')?.dispatchEvent(new Event('submit'));
+            }
+            // Check if settings modal is open
+            else if (settingsModal.modal?.style.display === 'flex') {
+                document.getElementById('saveSettingsBtn')?.click();
+            }
+        },
+        'Save current modal'
+    );
+
+    // Escape - Close modals
+    keyboardManager.register(
+        'escape',
+        () => {
+            profileModal.hide();
+            settingsModal.hide();
+            githubModal.hide();
+            hideContextMenu();
+        },
+        'Close modals and menus'
+    );
+
+    // Ctrl+F - Focus search
+    keyboardManager.register(
+        'ctrl+f',
+        () => {
+            searchInput?.focus();
+        },
+        'Focus search'
+    );
+
+    // Ctrl+R - Reload profiles
+    keyboardManager.register(
+        'ctrl+r',
+        async () => {
+            await loadInitialData();
+            showSuccess('Profiles reloaded');
+        },
+        'Reload profiles'
+    );
+
+    // F1 - Show keyboard shortcuts help
+    keyboardManager.register(
+        'f1',
+        () => {
+            showKeyboardShortcutsHelp();
+        },
+        'Show keyboard shortcuts'
+    );
+}
+
+/**
+ * Show keyboard shortcuts help dialog
+ */
+function showKeyboardShortcutsHelp() {
+    const shortcuts = keyboardManager.getShortcuts();
+    const shortcutsHtml = shortcuts
+        .map(
+            s => `
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+            <span style="color: var(--text-secondary);">${s.description}</span>
+            <kbd style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; font-family: monospace;">${s.key.replace(/ctrl/g, 'Ctrl').replace(/alt/g, 'Alt').replace(/shift/g, 'Shift').replace(/\+/g, ' + ')}</kbd>
+        </div>
+    `
+        )
+        .join('');
+
+    const helpHtml = `
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                    background: var(--bg-secondary); padding: 24px; border-radius: 8px; 
+                    border: 1px solid var(--border-color); max-width: 500px; width: 90%; 
+                    max-height: 80vh; overflow-y: auto; z-index: 10000; box-shadow: var(--shadow);">
+            <h3 style="margin-top: 0; margin-bottom: 16px; color: var(--text-primary);">⌨️ Keyboard Shortcuts</h3>
+            <div>
+                ${shortcutsHtml}
+            </div>
+            <button onclick="this.parentElement.remove()" 
+                    style="margin-top: 16px; width: 100%; padding: 8px; background: var(--accent-color); 
+                           color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Close (Esc)
+            </button>
+        </div>
+        <div onclick="this.previousElementSibling.remove(); this.remove();" 
+             style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+                    background: rgba(0, 0, 0, 0.5); z-index: 9999;"></div>
+    `;
+
+    const container = document.createElement('div');
+    container.innerHTML = helpHtml;
+    document.body.appendChild(container);
+}
+
+/**
  * Export components to global scope for debugging and HTML event handlers
  */
 window.app = {
@@ -473,9 +616,11 @@ window.app = {
     githubModal,
     githubIntegration,
     monacoEditor,
+    keyboardManager,
     profiles,
     reload: async () => {
         profiles = await window.electronAPI.getProfiles();
         renderProfiles();
     },
+    showShortcuts: showKeyboardShortcutsHelp,
 };
