@@ -267,12 +267,12 @@ export class ProfileModal {
         const aiModel = document.getElementById('aiModel').value;
 
         if (!profileName) {
-            this.showDescriptionHint('Please enter a profile name first', 'error');
+            this.showDescriptionHint('⚠ Please enter a profile name first', 'error');
             return;
         }
 
         if (!language) {
-            this.showDescriptionHint('Please select a programming language first', 'error');
+            this.showDescriptionHint('⚠ Please select a programming language first', 'error');
             return;
         }
 
@@ -280,6 +280,18 @@ export class ProfileModal {
         const originalText = generateBtn.textContent;
 
         try {
+            // Check if AI providers are configured
+            const providers = await window.electronAPI.getAvailableProviders();
+            const hasConfiguredProvider = providers.some(p => p.configured);
+            
+            if (!hasConfiguredProvider) {
+                this.showDescriptionHint(
+                    '⚠ No AI provider configured. Please configure Gemini or OpenAI API key in Settings.',
+                    'error'
+                );
+                return;
+            }
+
             generateBtn.textContent = '⏳ Generating...';
             generateBtn.disabled = true;
 
@@ -295,7 +307,10 @@ export class ProfileModal {
                 document.getElementById('profileDescription').value = result.description;
                 this.showDescriptionHint('✓ Description generated successfully!', 'success');
             } else {
-                this.showDescriptionHint(`✗ Failed: ${result.error || 'Unknown error'}`, 'error');
+                this.showDescriptionHint(
+                    `✗ ${result.error || 'Unknown error'}`,
+                    'error'
+                );
             }
         } catch (error) {
             this.showDescriptionHint(`✗ Error: ${error.message}`, 'error');
@@ -312,12 +327,15 @@ export class ProfileModal {
         const hint = document.getElementById('descriptionHint');
         hint.textContent = message;
         hint.style.display = 'block';
+        hint.style.fontSize = '13px';
+        hint.style.fontWeight = type === 'error' ? '500' : 'normal';
         hint.style.color = type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#666';
 
-        // Auto-hide after 5 seconds
+        // Auto-hide success messages after 5 seconds, but keep error messages visible longer
+        const hideDelay = type === 'error' ? 10000 : 5000;
         setTimeout(() => {
             hint.style.display = 'none';
-        }, 5000);
+        }, hideDelay);
     }
 
     /**
