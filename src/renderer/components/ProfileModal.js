@@ -295,13 +295,20 @@ export class ProfileModal {
             generateBtn.textContent = '⏳ Generating...';
             generateBtn.disabled = true;
 
-            const result = await window.electronAPI.generateProfileDescription(
+            // Add timeout to prevent hanging (30 seconds)
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000);
+            });
+
+            const generationPromise = window.electronAPI.generateProfileDescription(
                 profileName,
                 language,
                 workspacePath || undefined,
                 aiProvider || undefined,
                 aiModel || undefined
             );
+
+            const result = await Promise.race([generationPromise, timeoutPromise]);
 
             if (result.success && result.description) {
                 document.getElementById('profileDescription').value = result.description;
