@@ -48,7 +48,7 @@ export class WindowManager {
         });
 
         // Carrega conteúdo com query params
-        const htmlPath = path.join(__dirname, '../renderer/github-window/index.html');
+        const htmlPath = path.join(__dirname, '../../src/renderer/github-window/index.html');
         if (owner && repo) {
             await githubWindow.loadFile(htmlPath, {
                 query: { owner, repo },
