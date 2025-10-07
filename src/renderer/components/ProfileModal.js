@@ -28,6 +28,7 @@ export class ProfileModal {
         this.clearEnvVariables();
         this.clearGitHubSelections();
         this.populateAIProviders();
+        this.setupValidation();
 
         this.show();
         document.getElementById('profileName').focus();
@@ -82,6 +83,7 @@ export class ProfileModal {
         }
 
         document.getElementById('saveBtn').textContent = 'Update Profile';
+        this.setupValidation();
         this.show();
         document.getElementById('profileName').focus();
     }
@@ -316,5 +318,98 @@ export class ProfileModal {
         setTimeout(() => {
             hint.style.display = 'none';
         }, 5000);
+    }
+
+    /**
+     * Setup real-time validation for form fields
+     */
+    setupValidation() {
+        const profileName = document.getElementById('profileName');
+        const profileLanguage = document.getElementById('profileLanguage');
+
+        if (profileName) {
+            profileName.addEventListener('input', () => {
+                this.validateProfileName(profileName);
+            });
+            profileName.addEventListener('blur', () => {
+                this.validateProfileName(profileName);
+            });
+        }
+
+        if (profileLanguage) {
+            profileLanguage.addEventListener('change', () => {
+                this.validateLanguage(profileLanguage);
+            });
+        }
+    }
+
+    /**
+     * Validate profile name field
+     */
+    validateProfileName(input) {
+        const value = input.value.trim();
+        let errorMessage = '';
+
+        if (!value) {
+            errorMessage = 'Profile name is required';
+        } else if (value.length < 2) {
+            errorMessage = 'Profile name must be at least 2 characters';
+        } else if (value.length > 100) {
+            errorMessage = 'Profile name must be less than 100 characters';
+        } else if (!/^[a-zA-Z0-9\s\-_.]+$/.test(value)) {
+            errorMessage = 'Profile name can only contain letters, numbers, spaces, and -_.';
+        }
+
+        this.showValidationError(input, errorMessage);
+        return !errorMessage;
+    }
+
+    /**
+     * Validate language field
+     */
+    validateLanguage(select) {
+        const value = select.value;
+        const errorMessage = !value ? 'Please select a programming language' : '';
+
+        this.showValidationError(select, errorMessage);
+        return !errorMessage;
+    }
+
+    /**
+     * Show validation error for a field
+     */
+    showValidationError(element, message) {
+        // Remove existing error message
+        const existingError = element.parentElement.querySelector('.validation-error');
+        if (existingError) {
+            existingError.remove();
+        }
+
+        // Remove error styling
+        element.classList.remove('input-error');
+
+        if (message) {
+            // Add error styling
+            element.classList.add('input-error');
+
+            // Create error message element
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'validation-error';
+            errorDiv.textContent = message;
+            element.parentElement.appendChild(errorDiv);
+        }
+    }
+
+    /**
+     * Validate entire form
+     */
+    validateForm() {
+        const profileName = document.getElementById('profileName');
+        const profileLanguage = document.getElementById('profileLanguage');
+
+        const isNameValid = this.validateProfileName(profileName);
+        const isLanguageValid = this.validateLanguage(profileLanguage);
+
+        return isNameValid && isLanguageValid;
     }
 }

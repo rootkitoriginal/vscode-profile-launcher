@@ -1190,3 +1190,30 @@ a:hover {
 .input-with-button .btn {
     flex-shrink: 0;
 }
+
+/* Validation Errors */
+.input-error {
+    border-color: var(--error-color) !important;
+    background-color: rgba(244, 71, 71, 0.1);
+}
+
+.validation-error {
+    color: var(--error-color);
+    font-size: 12px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.validation-error::before {
+    content: '⚠';
+    font-size: 14px;
+}
+
+.form-input:focus.input-error,
+.form-select:focus.input-error,
+.form-textarea:focus.input-error {
+    border-color: var(--error-color);
+    box-shadow: 0 0 0 2px rgba(244, 71, 71, 0.2);
+}
