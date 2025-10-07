@@ -234,7 +234,7 @@ export class GitHubIntegration {
                 if (branch.protected) {
                     text += ' 🔒';
                 }
-                if (branch.lastCommit) {
+                if (branch.lastCommit && typeof branch.lastCommit.message === 'string') {
                     const commitShort = branch.lastCommit.message.split('\n')[0];
                     option.title = `${commitShort}\nby ${branch.lastCommit.author}`;
                 }
