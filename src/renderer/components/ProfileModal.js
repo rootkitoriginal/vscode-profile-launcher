@@ -253,4 +253,68 @@ export class ProfileModal {
     getCurrentProfile() {
         return this.currentProfile;
     }
+
+    /**
+     * Generate AI-powered description for the profile
+     */
+    async generateDescription() {
+        const profileName = document.getElementById('profileName').value;
+        const language = document.getElementById('profileLanguage').value;
+        const workspacePath = document.getElementById('workspacePath').value;
+        const aiProvider = document.getElementById('aiProvider').value;
+        const aiModel = document.getElementById('aiModel').value;
+
+        if (!profileName) {
+            this.showDescriptionHint('Please enter a profile name first', 'error');
+            return;
+        }
+
+        if (!language) {
+            this.showDescriptionHint('Please select a programming language first', 'error');
+            return;
+        }
+
+        const generateBtn = document.getElementById('generateDescriptionBtn');
+        const originalText = generateBtn.textContent;
+
+        try {
+            generateBtn.textContent = '⏳ Generating...';
+            generateBtn.disabled = true;
+
+            const result = await window.electronAPI.generateProfileDescription(
+                profileName,
+                language,
+                workspacePath || undefined,
+                aiProvider || undefined,
+                aiModel || undefined
+            );
+
+            if (result.success && result.description) {
+                document.getElementById('profileDescription').value = result.description;
+                this.showDescriptionHint('✓ Description generated successfully!', 'success');
+            } else {
+                this.showDescriptionHint(`✗ Failed: ${result.error || 'Unknown error'}`, 'error');
+            }
+        } catch (error) {
+            this.showDescriptionHint(`✗ Error: ${error.message}`, 'error');
+        } finally {
+            generateBtn.textContent = originalText;
+            generateBtn.disabled = false;
+        }
+    }
+
+    /**
+     * Show hint message below description field
+     */
+    showDescriptionHint(message, type = 'info') {
+        const hint = document.getElementById('descriptionHint');
+        hint.textContent = message;
+        hint.style.display = 'block';
+        hint.style.color = type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#666';
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            hint.style.display = 'none';
+        }, 5000);
+    }
 }

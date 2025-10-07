@@ -151,6 +151,12 @@ function setupEventListeners() {
     document.getElementById('aiProvider')?.addEventListener('change', e => {
         profileModal.updateAIModels(e.target.value);
     });
+
+    // Generate description button
+    document.getElementById('generateDescriptionBtn')?.addEventListener('click', () => {
+        profileModal.generateDescription();
+    });
+
     // Directory picker
     document.getElementById('selectWorkspacePath')?.addEventListener('click', selectWorkspacePath);
 
@@ -288,13 +294,13 @@ async function handleProfileSubmit(e) {
         showLoading();
         console.log('🚀 Starting profile submit...');
         const formData = new FormData(e.target);
-        
+
         // Get and validate required fields
         const name = formData.get('name')?.trim();
         const language = formData.get('language')?.trim();
-        
+
         console.log('📝 Form data:', { name, language });
-        
+
         // Validate required fields
         if (!name || name === '') {
             throw new Error('Profile name is required');
@@ -302,7 +308,7 @@ async function handleProfileSubmit(e) {
         if (!language || language === '') {
             throw new Error('Profile language is required');
         }
-        
+
         const profileData = {
             name: name,
             language: language,
@@ -314,12 +320,12 @@ async function handleProfileSubmit(e) {
             githubRepo: {
                 owner: formData.get('githubOwner')?.trim() || null,
                 repo: formData.get('githubRepo')?.trim() || null,
-                branch: formData.get('githubBranch')?.trim() || null
-            }
+                branch: formData.get('githubBranch')?.trim() || null,
+            },
         };
-        
+
         console.log('💾 Profile data to save:', profileData);
-        
+
         if (profileModal.inEditMode()) {
             const currentProfile = profileModal.getCurrentProfile();
             console.log('✏️ Updating profile:', currentProfile.id);

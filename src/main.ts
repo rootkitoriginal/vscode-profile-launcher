@@ -5,10 +5,12 @@ import { spawn } from 'child_process';
 import { DatabaseService } from './services/DatabaseService';
 import { ConfigService } from './services/ConfigService';
 import { AIService } from './services/AIService';
+import { DescriptionGeneratorService } from './services/DescriptionGeneratorService';
 import { ProfileController } from './controllers/ProfileController';
 import { SettingsController } from './controllers/SettingsController';
 import { AIController } from './controllers/AIController';
 import { GitHubController } from './controllers/GitHubController';
+import { DescriptionGeneratorController } from './controllers/DescriptionGeneratorController';
 import { GitHubService } from './services/GitHubService';
 import { Profile, CreateProfileData, UpdateProfileData } from './types';
 
@@ -17,6 +19,7 @@ class App {
     private db: DatabaseService;
     private config: ConfigService;
     private aiManager: AIService;
+    private descriptionGenerator: DescriptionGeneratorService;
     private githubManager: GitHubService | null = null;
 
     // Controllers
@@ -24,17 +27,22 @@ class App {
     private settingsController: SettingsController;
     private aiController: AIController;
     private githubController: GitHubController;
+    private descriptionGeneratorController: DescriptionGeneratorController;
 
     constructor() {
         this.config = ConfigService.getInstance();
         this.db = new DatabaseService();
         this.aiManager = AIService.getInstance();
+        this.descriptionGenerator = DescriptionGeneratorService.getInstance();
 
         // Initialize controllers
         this.profileController = new ProfileController(this.db);
         this.settingsController = new SettingsController(this.config, this.aiManager);
         this.aiController = new AIController(this.aiManager);
         this.githubController = new GitHubController(null);
+        this.descriptionGeneratorController = new DescriptionGeneratorController(
+            this.descriptionGenerator
+        );
 
         this.initialize();
     }
@@ -183,6 +191,27 @@ class App {
             return this.aiController.getAvailableProviders();
         });
 
+        // Description Generator Handler
+        ipcMain.handle(
+            'generate-profile-description',
+            async (
+                _: IpcMainInvokeEvent,
+                profileName: string,
+                language: string,
+                workspacePath?: string,
+                aiProvider?: string,
+                aiModel?: string
+            ) => {
+                return this.descriptionGeneratorController.generateDescription(
+                    profileName,
+                    language,
+                    workspacePath,
+                    aiProvider,
+                    aiModel
+                );
+            }
+        );
+
         // GitHub Integration Handlers - Using SettingsController and GitHubController
         ipcMain.handle('update-github-token', async (_: IpcMainInvokeEvent, token: string) => {
             try {
@@ -250,6 +279,24 @@ class App {
             await this.initGitHubManager();
             return this.githubController.isConfigured();
         });
+
+        ipcMain.handle('github-validate-token', async (_: IpcMainInvokeEvent, token: string) => {
+            await this.initGitHubManager();
+            return this.githubController.validateToken(token);
+        });
+
+        ipcMain.handle('github-list-user-orgs', async () => {
+            await this.initGitHubManager();
+            return this.githubController.listUserOrganizations();
+        });
+
+        ipcMain.handle(
+            'github-list-branches-detailed',
+            async (_: IpcMainInvokeEvent, owner: string, repo: string) => {
+                await this.initGitHubManager();
+                return this.githubController.listBranchesDetailed(owner, repo);
+            }
+        );
 
         // Directory picker handler
         ipcMain.handle('select-directory', async () => {

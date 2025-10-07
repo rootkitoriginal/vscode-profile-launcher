@@ -122,4 +122,63 @@ export class GitHubController {
             return false;
         }
     }
+
+    /**
+     * Validate GitHub token
+     */
+    async validateToken(
+        token: string
+    ): Promise<{ valid: boolean; user?: { login: string; name: string; avatarUrl: string } }> {
+        try {
+            if (!this.githubService) {
+                throw new Error('GitHub service not initialized');
+            }
+            return await this.githubService.validateToken(token);
+        } catch (error) {
+            console.error('Failed to validate GitHub token:', error);
+            return { valid: false };
+        }
+    }
+
+    /**
+     * List organizations for the authenticated user
+     */
+    async listUserOrganizations(): Promise<
+        Array<{ login: string; name: string; avatarUrl: string; description: string }>
+    > {
+        try {
+            if (!this.githubService) {
+                throw new Error('GitHub service not initialized');
+            }
+            return await this.githubService.listUserOrganizations();
+        } catch (error) {
+            console.error('Failed to list user organizations:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get detailed branch information
+     */
+    async listBranchesDetailed(
+        owner: string,
+        repo: string
+    ): Promise<
+        Array<{
+            name: string;
+            protected: boolean;
+            sha: string;
+            lastCommit?: { message: string; author: string; date: string };
+        }>
+    > {
+        try {
+            if (!this.githubService) {
+                throw new Error('GitHub service not initialized');
+            }
+            return await this.githubService.listBranchesDetailed(owner, repo);
+        } catch (error) {
+            console.error('Failed to list detailed branches:', error);
+            throw error;
+        }
+    }
 }

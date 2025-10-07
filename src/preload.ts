@@ -50,6 +50,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getAvailableProviders: (): Promise<Array<{ name: 'gemini' | 'openai'; configured: boolean }>> =>
         ipcRenderer.invoke('get-available-providers'),
 
+    generateProfileDescription: (
+        profileName: string,
+        language: string,
+        workspacePath?: string,
+        aiProvider?: string,
+        aiModel?: string
+    ): Promise<{ success: boolean; description?: string; error?: string }> =>
+        ipcRenderer.invoke(
+            'generate-profile-description',
+            profileName,
+            language,
+            workspacePath,
+            aiProvider,
+            aiModel
+        ),
+
     getProfilePaths: (
         profileName: string
     ): Promise<{ baseDir: string; dataDir: string; extensionsDir: string }> =>
@@ -82,6 +98,27 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('github-validate-repo', owner, repo),
 
     isGitHubConfigured: (): Promise<boolean> => ipcRenderer.invoke('is-github-configured'),
+
+    githubValidateToken: (
+        token: string
+    ): Promise<{ valid: boolean; user?: { login: string; name: string; avatarUrl: string } }> =>
+        ipcRenderer.invoke('github-validate-token', token),
+
+    githubListUserOrgs: (): Promise<
+        Array<{ login: string; name: string; avatarUrl: string; description: string }>
+    > => ipcRenderer.invoke('github-list-user-orgs'),
+
+    githubListBranchesDetailed: (
+        owner: string,
+        repo: string
+    ): Promise<
+        Array<{
+            name: string;
+            protected: boolean;
+            sha: string;
+            lastCommit?: { message: string; author: string; date: string };
+        }>
+    > => ipcRenderer.invoke('github-list-branches-detailed', owner, repo),
 
     // Directory picker
     selectDirectory: (): Promise<string | null> => ipcRenderer.invoke('select-directory'),
@@ -118,6 +155,13 @@ declare global {
             getAvailableProviders: () => Promise<
                 Array<{ name: 'gemini' | 'openai'; configured: boolean }>
             >;
+            generateProfileDescription: (
+                profileName: string,
+                language: string,
+                workspacePath?: string,
+                aiProvider?: string,
+                aiModel?: string
+            ) => Promise<{ success: boolean; description?: string; error?: string }>;
             getProfilePaths: (
                 profileName: string
             ) => Promise<{ baseDir: string; dataDir: string; extensionsDir: string }>;
@@ -139,6 +183,26 @@ declare global {
             githubListBranches: (owner: string, repo: string) => Promise<string[]>;
             githubValidateRepo: (owner: string, repo: string) => Promise<boolean>;
             isGitHubConfigured: () => Promise<boolean>;
+            githubValidateToken: (
+                token: string
+            ) => Promise<{
+                valid: boolean;
+                user?: { login: string; name: string; avatarUrl: string };
+            }>;
+            githubListUserOrgs: () => Promise<
+                Array<{ login: string; name: string; avatarUrl: string; description: string }>
+            >;
+            githubListBranchesDetailed: (
+                owner: string,
+                repo: string
+            ) => Promise<
+                Array<{
+                    name: string;
+                    protected: boolean;
+                    sha: string;
+                    lastCommit?: { message: string; author: string; date: string };
+                }>
+            >;
             selectDirectory: () => Promise<string | null>;
             githubListRepos: (owner: string) => Promise<
                 Array<{
